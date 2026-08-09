@@ -1,0 +1,51 @@
+{
+  "description": "Bao, Shu army raids the grain prototype",
+  "miniprogramRoot": "./",
+  "appid": "wxc99662ee0bfded03",
+  "projectname": "报，蜀军来劫粮",
+  "compileType": "game",
+  "libVersion": "widelyUsed",
+  "setting": {
+    "es6": true,
+    "minified": false,
+    "urlCheck": false,
+    "postcss": false,
+    "compileWorklet": false,
+    "uglifyFileName": false,
+    "uploadWithSourceMap": true,
+    "enhance": false,
+    "packNpmManually": false,
+    "packNpmRelationList": [],
+    "minifyWXSS": true,
+    "minifyWXML": true,
+    "localPlugins": false,
+    "disableUseStrict": false,
+    "useCompilerPlugins": false,
+    "condition": false,
+    "swc": false,
+    "disableSWC": true,
+    "babelSetting": {
+      "ignore": [],
+      "disablePlugins": [],
+      "outputPath": ""
+    }
+  },
+  "simulatorPluginLibVersion": {},
+  "packOptions": {
+    "ignore": [
+      { "type": "folder", "value": ".git" },
+      { "type": "folder", "value": "assets/concepts" },
+      { "type": "folder", "value": "assets/sprites" },
+      { "type": "folder", "value": "docs" },
+      { "type": "folder", "value": "scripts" },
+      { "type": "folder", "value": "tests" },
+      { "type": "file", "value": ".gitignore" },
+      { "type": "file", "value": "project.private.config.json" },
+      { "type": "file", "value": "README.md" },
+      { "type": "file", "value": "package.json" }
+    ],
+    "include": []
+  },
+  "isGameTourist": false,
+  "editorSetting": {}
+}

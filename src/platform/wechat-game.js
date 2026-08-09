@@ -17,6 +17,9 @@ function WeChatGame() {
   this.height = system.screenHeight;
   this.pixelRatio = Math.min(system.pixelRatio || 1, 2);
   var safeTop = system.safeArea && system.safeArea.top ? system.safeArea.top : 0;
+  var safeBottom = system.safeArea && system.safeArea.bottom
+    ? Math.max(0, this.height - system.safeArea.bottom)
+    : 0;
   var menuBottom = 0;
   if (wx.getMenuButtonBoundingClientRect) {
     try {
@@ -27,6 +30,7 @@ function WeChatGame() {
     }
   }
   this.safeTop = Math.max(safeTop, menuBottom);
+  this.safeBottom = safeBottom;
   this.playTop = this.safeTop + 66;
   this.canvas = wx.createCanvas();
   this.canvas.width = this.width * this.pixelRatio;
@@ -42,6 +46,7 @@ function WeChatGame() {
   this.zhugeImage = loadImage("assets/runtime/zhuge-atlas.png");
   this.renderer = new Renderer(this.context, this.width, this.height, {
     safeTop: this.safeTop,
+    safeBottom: this.safeBottom,
     playTop: this.playTop,
     enemyAtlases: {
       pushedStove: this.pushedStoveImage,
@@ -52,6 +57,7 @@ function WeChatGame() {
     heroAtlases: { guan: this.guanImage, zhuge: this.zhugeImage }
   });
   this.screen = "home";
+  this.previousScreen = "home";
   this.settings = { vibration: true, music: true, sound: true };
   this.audio = new AudioManager(wx);
   this.lowHealthDanger = false;
@@ -60,25 +66,29 @@ function WeChatGame() {
   var self = this;
   this.input = new TouchController(wx, function (x, y) {
     self.audio.unlock();
-    if (self.screen === "home") {
-      var homeAction = self.renderer.getHomeActionAt(x, y);
-      if (homeAction === "start") {
+    if (self.screen === "home" || self.screen === "hero") {
+      var topAction = self.renderer.getTopActionAt(x, y);
+      if (topAction === "settings") {
+        self.previousScreen = self.screen;
+        self.screen = "settings";
+        return false;
+      }
+      var navAction = self.renderer.getBottomNavActionAt(x, y);
+      if (navAction !== "none") {
+        self.screen = navAction;
+        return false;
+      }
+      if (self.screen === "home" && self.renderer.getHomeActionAt(x, y) === "start") {
         self.world.reset();
         self.lowHealthDanger = false;
         self.screen = "battle";
         return true;
       }
-      if (homeAction === "hero" || homeAction === "settings") {
-        self.screen = homeAction;
-      }
-      return false;
-    }
-    if (self.screen === "hero") {
-      var heroAction = self.renderer.getHeroActionAt(x, y);
-      if (heroAction === "confirm") {
-        self.screen = "home";
-      } else if (heroAction !== "none") {
-        self.world.setHero(heroAction);
+      if (self.screen === "hero") {
+        var heroAction = self.renderer.getHeroActionAt(x, y);
+        if (heroAction !== "none") {
+          self.world.setHero(heroAction);
+        }
       }
       return false;
     }
@@ -93,7 +103,7 @@ function WeChatGame() {
         self.settings.sound = !self.settings.sound;
         self.audio.setSoundEnabled(self.settings.sound);
       } else if (settingsAction === "back") {
-        self.screen = "home";
+        self.screen = self.previousScreen || "home";
       }
       return false;
     }

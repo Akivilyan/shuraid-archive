@@ -8,6 +8,7 @@ function Renderer(context, width, height, options) {
   this.width = width;
   this.height = height;
   this.safeTop = options.safeTop || 0;
+  this.safeBottom = options.safeBottom || 0;
   this.playTop = options.playTop || 74;
   this.enemyAtlases = options.enemyAtlases || {};
   this.heroAtlases = options.heroAtlases || {};
@@ -31,9 +32,14 @@ function roundedRect(ctx, x, y, width, height, radius) {
 Renderer.prototype.render = function (world, joystick, ui) {
   if (ui && ui.screen !== "battle") {
     this.drawHomeBase(ui.homeImage);
-    if (ui.screen === "hero") { this.drawHeroScreen(world.heroId, ui.elapsed || 0); }
-    else if (ui.screen === "settings") { this.drawSettingsScreen(ui.settings); }
-    else { this.drawHomeScreen(world, ui.elapsed || 0); }
+    if (ui.screen === "settings") {
+      this.drawSettingsScreen(ui.settings);
+    } else {
+      this.drawShellHeader();
+      if (ui.screen === "hero") { this.drawHeroScreen(world.heroId, ui.elapsed || 0); }
+      else { this.drawHomeScreen(world, ui.elapsed || 0); }
+      this.drawBottomNav(ui.screen === "hero" ? "hero" : "home");
+    }
     return;
   }
   var ctx = this.context;
@@ -115,51 +121,155 @@ Renderer.prototype.drawHeroPortrait = function (heroId, x, baselineY, height, se
 
 Renderer.prototype.drawHomeScreen = function (world, elapsed) {
   var ctx = this.context;
-  var titleY = Math.max(this.safeTop + 36, this.height * 0.08);
-  ctx.textAlign = "center";
-  ctx.font = "bold 30px sans-serif";
-  ctx.lineWidth = 7;
-  ctx.strokeStyle = "#fff7d6";
-  ctx.strokeText("报，蜀军来劫粮", this.width / 2, titleY);
-  ctx.fillStyle = "#3c7f3f";
-  ctx.fillText("报，蜀军来劫粮", this.width / 2, titleY);
+  var layout = this.getShellLayout();
+  var panelX = 20;
+  var panelY = layout.contentTop + 8;
+  var panelWidth = this.width - 40;
+  var buttonHeight = 60;
+  var buttonY = layout.contentBottom - buttonHeight - 14;
+  var panelHeight = buttonY - panelY - 14;
 
-  var stageX = this.width * 0.12;
-  var stageY = Math.max(this.safeTop + 72, this.height * 0.15);
-  var stageWidth = this.width * 0.76;
-  var stageHeight = Math.min(380, this.height * 0.46);
-  roundedRect(ctx, stageX, stageY, stageWidth, stageHeight, 28);
-  ctx.fillStyle = "rgba(255, 248, 218, 0.96)"; ctx.fill();
-  ctx.strokeStyle = "rgba(125, 84, 32, 0.82)"; ctx.lineWidth = 5; ctx.stroke();
-  roundedRect(ctx, stageX + 7, stageY + 7, stageWidth - 14, stageHeight - 14, 22);
-  ctx.strokeStyle = "rgba(229, 174, 57, 0.72)"; ctx.lineWidth = 2; ctx.stroke();
-  var portraitHeight = Math.min(238, stageHeight * 0.7);
-  this.drawHeroPortrait(world.hero.id, this.width / 2, stageY + stageHeight * 0.75, portraitHeight, false, elapsed);
-  ctx.textAlign = "center";
-  ctx.font = "bold 20px sans-serif";
-  ctx.fillStyle = "#4b351f";
-  ctx.fillText(world.hero.name + " · " + world.hero.className, this.width / 2, stageY + stageHeight - 25);
-  ctx.font = "14px sans-serif";
-  ctx.fillStyle = "#765832";
-  ctx.fillText("当前出阵武将", this.width / 2, stageY + 30);
+  roundedRect(ctx, panelX, panelY, panelWidth, panelHeight, 26);
+  ctx.fillStyle = "rgba(255, 249, 221, 0.97)"; ctx.fill();
+  ctx.strokeStyle = "#d58c19"; ctx.lineWidth = 4; ctx.stroke();
+  roundedRect(ctx, panelX + 7, panelY + 7, panelWidth - 14, panelHeight - 14, 20);
+  ctx.strokeStyle = "rgba(255, 214, 104, 0.9)"; ctx.lineWidth = 2; ctx.stroke();
 
+  ctx.textAlign = "center";
+  ctx.fillStyle = "#8b4c11";
+  ctx.font = "bold 15px sans-serif";
+  ctx.fillText("第一关 · 粮道奇袭", this.width / 2, panelY + 34);
+  ctx.fillStyle = "#3e3425";
   ctx.font = "bold 27px sans-serif";
-  ctx.fillStyle = "#74400f";
-  ctx.fillText("出 阵 劫 粮", this.width / 2, this.height * 0.785);
-  ctx.font = "bold 18px sans-serif";
-  ctx.fillStyle = "#245f82";
-  ctx.fillText("选 武 将", this.width * 0.28, this.height * 0.925);
-  ctx.fillStyle = "#943e2e";
-  ctx.fillText("军 令 设 置", this.width * 0.72, this.height * 0.925);
+  ctx.fillText("夜袭敌军粮道", this.width / 2, panelY + 68);
+  ctx.fillStyle = "#7b6646";
+  ctx.font = "14px sans-serif";
+  ctx.fillText("预计 5 分钟  ·  自动攻击", this.width / 2, panelY + 94);
+
+  var portraitHeight = Math.min(206, panelHeight * 0.54);
+  this.drawHeroPortrait(world.hero.id, this.width / 2, panelY + panelHeight - 52, portraitHeight, false, elapsed);
+  roundedRect(ctx, panelX + 54, panelY + panelHeight - 54, panelWidth - 108, 40, 18);
+  ctx.fillStyle = "rgba(75, 53, 31, 0.9)"; ctx.fill();
+  ctx.fillStyle = "#fff8d8";
+  ctx.font = "bold 16px sans-serif";
+  ctx.fillText(world.hero.name + " · " + world.hero.className, this.width / 2, panelY + panelHeight - 28);
+
+  roundedRect(ctx, panelX + 4, buttonY, panelWidth - 8, buttonHeight, 26);
+  ctx.fillStyle = "#ffc52f"; ctx.fill();
+  ctx.strokeStyle = "#8f4d0c"; ctx.lineWidth = 4; ctx.stroke();
+  roundedRect(ctx, panelX + 10, buttonY + 6, panelWidth - 20, buttonHeight - 16, 20);
+  ctx.strokeStyle = "rgba(255, 246, 164, 0.96)"; ctx.lineWidth = 2; ctx.stroke();
+  ctx.fillStyle = "#713600";
+  ctx.font = "bold 24px sans-serif";
+  ctx.fillText("出阵劫粮", this.width / 2, buttonY + 39);
 };
 
 Renderer.prototype.getHomeActionAt = function (x, y) {
-  if (y >= this.height * 0.69 && y <= this.height * 0.85 && x >= this.width * 0.13 && x <= this.width * 0.87) {
+  var layout = this.getShellLayout();
+  if (x >= 20 && x <= this.width - 20 && y >= layout.contentBottom - 80 && y <= layout.contentBottom - 8) {
     return "start";
   }
-  if (y >= this.height * 0.85) {
-    return x < this.width / 2 ? "hero" : "settings";
+  return "none";
+};
+
+Renderer.prototype.getShellLayout = function () {
+  var navHeight = 76;
+  var navY = this.height - this.safeBottom - navHeight;
+  return {
+    headerY: this.safeTop + 6,
+    headerHeight: 52,
+    contentTop: this.safeTop + 64,
+    contentBottom: navY - 10,
+    navY: navY,
+    navHeight: navHeight
+  };
+};
+
+Renderer.prototype.drawShellHeader = function () {
+  var ctx = this.context;
+  var layout = this.getShellLayout();
+  ctx.textAlign = "left";
+  ctx.font = "bold 23px sans-serif";
+  ctx.lineWidth = 5;
+  ctx.strokeStyle = "rgba(255, 249, 218, 0.98)";
+  ctx.strokeText("报，蜀军来劫粮", 18, layout.headerY + 34);
+  ctx.fillStyle = "#3d793f";
+  ctx.fillText("报，蜀军来劫粮", 18, layout.headerY + 34);
+
+  roundedRect(ctx, this.width - 58, layout.headerY + 2, 48, 48, 20);
+  ctx.fillStyle = "rgba(72, 59, 42, 0.84)"; ctx.fill();
+  ctx.strokeStyle = "rgba(255, 244, 197, 0.92)"; ctx.lineWidth = 2; ctx.stroke();
+  ctx.textAlign = "center";
+  ctx.fillStyle = "#fff8d8";
+  ctx.font = "bold 16px sans-serif";
+  ctx.fillText("设置", this.width - 34, layout.headerY + 32);
+};
+
+Renderer.prototype.getTopActionAt = function (x, y) {
+  var layout = this.getShellLayout();
+  if (x >= this.width - 64 && x <= this.width - 4 && y >= layout.headerY && y <= layout.headerY + 52) {
+    return "settings";
   }
+  return "none";
+};
+
+Renderer.prototype.drawBottomNav = function (activeScreen) {
+  var ctx = this.context;
+  var layout = this.getShellLayout();
+  var items = [
+    { label: "军需", glyph: "囊", locked: true },
+    { label: "武将", glyph: "将", screen: "hero" },
+    { label: "劫粮", glyph: "粮", screen: "home" },
+    { label: "战报", glyph: "报", locked: true },
+    { label: "军略", glyph: "略", locked: true }
+  ];
+  var cellWidth = this.width / items.length;
+  ctx.fillStyle = "rgba(255, 246, 210, 0.98)";
+  ctx.fillRect(0, layout.navY, this.width, layout.navHeight + this.safeBottom);
+  ctx.strokeStyle = "#c77a16";
+  ctx.lineWidth = 3;
+  ctx.beginPath(); ctx.moveTo(0, layout.navY); ctx.lineTo(this.width, layout.navY); ctx.stroke();
+
+  for (var index = 0; index < items.length; index += 1) {
+    var item = items[index];
+    var centerX = cellWidth * (index + 0.5);
+    var active = item.screen === activeScreen;
+    var iconY = layout.navY + 26;
+    if (index === 2) {
+      ctx.beginPath();
+      ctx.arc(centerX, layout.navY + 18, 32, 0, Math.PI * 2);
+      ctx.fillStyle = active ? "#ffc32d" : "#f0ba38"; ctx.fill();
+      ctx.strokeStyle = "#94510d"; ctx.lineWidth = 4; ctx.stroke();
+      iconY = layout.navY + 24;
+    } else if (active) {
+      roundedRect(ctx, centerX - 31, layout.navY + 7, 62, 50, 18);
+      ctx.fillStyle = "#66bfe4"; ctx.fill();
+      ctx.strokeStyle = "#326b86"; ctx.lineWidth = 3; ctx.stroke();
+    }
+    ctx.textAlign = "center";
+    ctx.font = "bold 18px sans-serif";
+    ctx.fillStyle = item.locked ? "#9c927e" : active ? "#57320b" : "#5d4b32";
+    ctx.fillText(item.glyph, centerX, iconY);
+    ctx.font = "bold 13px sans-serif";
+    ctx.fillText(item.label, centerX, layout.navY + 67);
+    if (item.locked) {
+      ctx.font = "10px sans-serif";
+      ctx.fillStyle = "#a79b85";
+      ctx.fillText("未开", centerX, layout.navY + 44);
+    } else if (active && index !== 2) {
+      ctx.font = "10px sans-serif";
+      ctx.fillStyle = "#fff";
+      ctx.fillText("当前", centerX, layout.navY + 48);
+    }
+  }
+};
+
+Renderer.prototype.getBottomNavActionAt = function (x, y) {
+  var layout = this.getShellLayout();
+  if (x < 0 || x > this.width || y < layout.navY - 14 || y > this.height) { return "none"; }
+  var index = Math.floor(x / (this.width / 5));
+  if (index === 1) { return "hero"; }
+  if (index === 2) { return "home"; }
   return "none";
 };
 
@@ -169,75 +279,94 @@ Renderer.prototype.drawPanelShade = function () {
 };
 
 Renderer.prototype.getHeroLayout = function () {
-  var panelY = Math.max(this.safeTop + 24, 76);
-  var panelHeight = this.height - panelY - 34;
+  var shell = this.getShellLayout();
+  var panelY = shell.contentTop + 8;
+  var panelHeight = shell.contentBottom - panelY - 8;
+  var choiceTop = panelY + panelHeight - 124;
   return {
-    x: 22,
+    x: 18,
     y: panelY,
-    width: this.width - 44,
+    width: this.width - 36,
     height: panelHeight,
-    cardTop: panelY + 68,
-    cardHeight: 112,
-    cardGap: 12,
-    buttonY: panelY + panelHeight - 70
+    portraitBottom: Math.min(panelY + Math.min(348, panelHeight * 0.62), choiceTop - 78),
+    choiceTop: choiceTop,
+    choiceHeight: 112,
+    choiceGap: 8
   };
+};
+
+Renderer.prototype.getHeroCards = function () {
+  return [
+    { id: "guan", name: "关羽", type: "长兵", color: "#39a957", note: "近身横扫" },
+    { id: "huang", name: "黄忠", type: "弓箭", color: "#d68721", note: "远程箭矢" },
+    { id: "zhuge", name: "诸葛亮", type: "法术", color: "#5485cf", note: "闪电与阵法" }
+  ];
 };
 
 Renderer.prototype.drawHeroScreen = function (selectedHeroId, elapsed) {
   var ctx = this.context;
-  this.drawPanelShade();
   var layout = this.getHeroLayout();
   var x = layout.x;
   var y = layout.y;
   var width = layout.width;
   var height = layout.height;
-  roundedRect(ctx, x, y, width, height, 26);
+  roundedRect(ctx, x, y, width, height, 24);
   ctx.fillStyle = "rgba(255, 248, 218, 0.97)"; ctx.fill();
-  ctx.strokeStyle = "#e6a928"; ctx.lineWidth = 5; ctx.stroke();
-  ctx.textAlign = "center"; ctx.fillStyle = "#4b351f"; ctx.font = "bold 27px sans-serif";
-  ctx.fillText("选择武将", this.width / 2, y + 43);
-  var cards = [
-    { id: "guan", name: "关羽", type: "长兵", color: "#39a957", note: "范围横扫" },
-    { id: "huang", name: "黄忠", type: "弓箭", color: "#e39a31", note: "远程箭矢" },
-    { id: "zhuge", name: "诸葛亮", type: "法术", color: "#5e91d8", note: "落点范围" }
-  ];
+  ctx.strokeStyle = "#d58c19"; ctx.lineWidth = 4; ctx.stroke();
+  var cards = this.getHeroCards();
+  var selectedCard = cards[0];
+  for (var selectedIndex = 0; selectedIndex < cards.length; selectedIndex += 1) {
+    if (cards[selectedIndex].id === selectedHeroId) { selectedCard = cards[selectedIndex]; }
+  }
+
+  ctx.textAlign = "center";
+  ctx.fillStyle = "#80501d";
+  ctx.font = "bold 15px sans-serif";
+  ctx.fillText("当前出阵武将", this.width / 2, y + 30);
+  this.drawHeroPortrait(selectedHeroId, this.width / 2, layout.portraitBottom - 18, Math.min(216, height * 0.42), true, elapsed);
+  ctx.fillStyle = "#40301f";
+  ctx.font = "bold 25px sans-serif";
+  ctx.fillText(selectedCard.name, this.width / 2, layout.portraitBottom + 12);
+  ctx.fillStyle = selectedCard.color;
+  ctx.font = "bold 15px sans-serif";
+  ctx.fillText(selectedCard.type + " · " + selectedCard.note, this.width / 2, layout.portraitBottom + 38);
+  ctx.fillStyle = "#7b684b";
+  ctx.font = "14px sans-serif";
+  ctx.fillText("点击下方武将即可立即换将", this.width / 2, layout.portraitBottom + 64);
+
+  var cardWidth = (width - 32 - layout.choiceGap * 2) / 3;
   for (var index = 0; index < cards.length; index += 1) {
     var card = cards[index];
     var selected = card.id === selectedHeroId;
-    var cardY = layout.cardTop + index * (layout.cardHeight + layout.cardGap);
+    var cardX = x + 16 + index * (cardWidth + layout.choiceGap);
+    var cardY = layout.choiceTop;
     var selectedLift = selected ? -2 : 0;
-    roundedRect(ctx, x + 18, cardY + selectedLift, width - 36, layout.cardHeight, 20);
+    roundedRect(ctx, cardX, cardY + selectedLift, cardWidth, layout.choiceHeight, 18);
     ctx.fillStyle = selected ? "#fff0a8" : "#fffaf0"; ctx.fill();
-    ctx.strokeStyle = selected ? "#c98513" : "#d7c89b"; ctx.lineWidth = selected ? 5 : 2; ctx.stroke();
+    ctx.strokeStyle = selected ? "#c98513" : "#d7c89b"; ctx.lineWidth = selected ? 4 : 2; ctx.stroke();
     if (selected) {
-      roundedRect(ctx, x + 24, cardY + selectedLift + 6, width - 48, layout.cardHeight - 12, 15);
+      roundedRect(ctx, cardX + 5, cardY + selectedLift + 5, cardWidth - 10, layout.choiceHeight - 10, 13);
       ctx.strokeStyle = "rgba(255, 255, 234, 0.92)"; ctx.lineWidth = 2; ctx.stroke();
     }
-    this.drawHeroPortrait(card.id, x + 78, cardY + 94 + selectedLift, 88, selected, elapsed);
-    ctx.textAlign = "left"; ctx.fillStyle = "#4b351f"; ctx.font = "bold 21px sans-serif"; ctx.fillText(card.name, x + 132, cardY + 37 + selectedLift);
-    ctx.font = "bold 14px sans-serif"; ctx.fillStyle = card.color; ctx.fillText(card.type, x + 132, cardY + 63 + selectedLift);
-    ctx.font = "14px sans-serif"; ctx.fillStyle = "#6a563d"; ctx.fillText(card.note, x + 132, cardY + 88 + selectedLift);
-    if (card.id === selectedHeroId) {
-      ctx.textAlign = "right"; ctx.fillStyle = "#9a5f0b"; ctx.font = "bold 14px sans-serif"; ctx.fillText("已选中", x + width - 32, cardY + 37 + selectedLift);
-    }
+    this.drawHeroPortrait(card.id, cardX + cardWidth / 2, cardY + 70 + selectedLift, 58, false, elapsed);
+    ctx.textAlign = "center";
+    ctx.fillStyle = "#4b351f";
+    ctx.font = "bold 14px sans-serif";
+    ctx.fillText(card.name, cardX + cardWidth / 2, cardY + 86 + selectedLift);
+    ctx.font = "bold 11px sans-serif";
+    ctx.fillStyle = selected ? "#9a5f0b" : card.color;
+    ctx.fillText(selected ? "当前" : card.type, cardX + cardWidth / 2, cardY + 105 + selectedLift);
   }
-  var buttonY = layout.buttonY;
-  roundedRect(ctx, x + 28, buttonY, width - 56, 48, 22);
-  ctx.fillStyle = "#62bde3"; ctx.fill(); ctx.strokeStyle = "#356b89"; ctx.lineWidth = 3; ctx.stroke();
-  ctx.textAlign = "center"; ctx.fillStyle = "#fff"; ctx.font = "bold 18px sans-serif"; ctx.fillText("确认武将", this.width / 2, buttonY + 31);
 };
 
 Renderer.prototype.getHeroActionAt = function (x, y) {
   var layout = this.getHeroLayout();
-  if (x >= 40 && x <= this.width - 40) {
-    for (var index = 0; index < 3; index += 1) {
-      var cardY = layout.cardTop + index * (layout.cardHeight + layout.cardGap);
-      if (y >= cardY && y <= cardY + layout.cardHeight) {
-        return ["guan", "huang", "zhuge"][index];
-      }
-    }
+  var cardWidth = (layout.width - 32 - layout.choiceGap * 2) / 3;
+  if (y < layout.choiceTop - 6 || y > layout.choiceTop + layout.choiceHeight + 6) { return "none"; }
+  for (var index = 0; index < 3; index += 1) {
+    var cardX = layout.x + 16 + index * (cardWidth + layout.choiceGap);
+    if (x >= cardX - 3 && x <= cardX + cardWidth + 3) { return ["guan", "huang", "zhuge"][index]; }
   }
-  if (x >= 40 && x <= this.width - 40 && y >= layout.buttonY - 6 && y <= layout.buttonY + 54) { return "confirm"; }
   return "none";
 };
 

@@ -6,7 +6,7 @@ var Renderer = require("../src/render/renderer");
 
 function makeContext() {
   var context = {};
-  ["arc", "beginPath", "closePath", "drawImage", "ellipse", "fill", "fillRect", "fillText", "lineTo", "moveTo", "quadraticCurveTo", "restore", "rotate", "save", "scale", "stroke", "strokeRect", "strokeText", "translate"].forEach(function (method) {
+  ["arc", "beginPath", "clearRect", "clip", "closePath", "drawImage", "ellipse", "fill", "fillRect", "fillText", "lineTo", "moveTo", "quadraticCurveTo", "rect", "restore", "rotate", "save", "scale", "stroke", "strokeRect", "strokeText", "translate"].forEach(function (method) {
     context[method] = function () {};
   });
   return context;
@@ -21,12 +21,27 @@ function makeHomeWorld(heroId) {
   return { hero: heroes[heroId], heroId: heroId };
 }
 
-test("home screen touch regions keep the primary action large and separate", function () {
-  var renderer = new Renderer(null, 375, 812, { safeTop: 44, playTop: 110 });
-  assert.equal(renderer.getHomeActionAt(187, 620), "start");
-  assert.equal(renderer.getHomeActionAt(90, 760), "hero");
-  assert.equal(renderer.getHomeActionAt(285, 760), "settings");
+test("home screen keeps one large primary action above the fixed navigation", function () {
+  var renderer = new Renderer(null, 375, 812, { safeTop: 44, safeBottom: 20, playTop: 110 });
+  var layout = renderer.getShellLayout();
+  assert.equal(renderer.getHomeActionAt(187, layout.contentBottom - 42), "start");
   assert.equal(renderer.getHomeActionAt(10, 200), "none");
+});
+
+test("fixed navigation only exposes implemented pages", function () {
+  var renderer = new Renderer(null, 375, 812, { safeTop: 44, safeBottom: 20, playTop: 110 });
+  var navY = renderer.getShellLayout().navY;
+  assert.equal(renderer.getBottomNavActionAt(112, navY + 35), "hero");
+  assert.equal(renderer.getBottomNavActionAt(187, navY + 35), "home");
+  assert.equal(renderer.getBottomNavActionAt(37, navY + 35), "none");
+  assert.equal(renderer.getBottomNavActionAt(337, navY + 35), "none");
+  assert.equal(renderer.getBottomNavActionAt(187, navY - 30), "none");
+});
+
+test("settings remains a separate safe-area header action", function () {
+  var renderer = new Renderer(null, 375, 812, { safeTop: 44, safeBottom: 20, playTop: 110 });
+  assert.equal(renderer.getTopActionAt(342, 72), "settings");
+  assert.equal(renderer.getTopActionAt(187, 72), "none");
 });
 
 test("settings touch regions expose vibration, music, sound, and back separately", function () {
@@ -39,13 +54,24 @@ test("settings touch regions expose vibration, music, sound, and back separately
 });
 
 test("hero screen exposes three large and separate hero choices", function () {
-  var renderer = new Renderer(null, 375, 812, { safeTop: 44, playTop: 110 });
-  var panelY = Math.max(44 + 24, 76);
-  assert.equal(renderer.getHeroActionAt(187, panelY + 100), "guan");
-  assert.equal(renderer.getHeroActionAt(187, panelY + 224), "huang");
-  assert.equal(renderer.getHeroActionAt(187, panelY + 348), "zhuge");
-  assert.equal(renderer.getHeroActionAt(10, panelY + 100), "none");
-  assert.equal(renderer.getHeroActionAt(187, 745), "confirm");
+  var renderer = new Renderer(null, 375, 812, { safeTop: 44, safeBottom: 20, playTop: 110 });
+  var layout = renderer.getHeroLayout();
+  var cardWidth = (layout.width - 32 - layout.choiceGap * 2) / 3;
+  var choiceY = layout.choiceTop + layout.choiceHeight / 2;
+  assert.equal(renderer.getHeroActionAt(layout.x + 16 + cardWidth / 2, choiceY), "guan");
+  assert.equal(renderer.getHeroActionAt(layout.x + 16 + cardWidth * 1.5 + layout.choiceGap, choiceY), "huang");
+  assert.equal(renderer.getHeroActionAt(layout.x + 16 + cardWidth * 2.5 + layout.choiceGap * 2, choiceY), "zhuge");
+  assert.equal(renderer.getHeroActionAt(10, choiceY), "none");
+  assert.equal(renderer.getHeroActionAt(187, layout.choiceTop - 40), "none");
+});
+
+test("compact screens keep hero copy, choices, navigation, and the bottom safe area separate", function () {
+  var renderer = new Renderer(null, 375, 667, { safeTop: 24, safeBottom: 20, playTop: 90 });
+  var shell = renderer.getShellLayout();
+  var hero = renderer.getHeroLayout();
+  assert.ok(hero.portraitBottom + 64 < hero.choiceTop);
+  assert.ok(hero.choiceTop + hero.choiceHeight < shell.contentBottom);
+  assert.equal(shell.navY + shell.navHeight + renderer.safeBottom, renderer.height);
 });
 
 test("home screen names the game and renders the selected hero portrait", function () {
@@ -59,7 +85,12 @@ test("home screen names the game and renders the selected hero portrait", functi
     playTop: 110,
     heroAtlases: { zhuge: { width: 2304, height: 288 } }
   });
-  renderer.drawHomeScreen(makeHomeWorld("zhuge"), 1.2);
+  renderer.render(makeHomeWorld("zhuge"), null, {
+    screen: "home",
+    homeImage: null,
+    settings: {},
+    elapsed: 1.2
+  });
   assert.ok(labels.includes("报，蜀军来劫粮"));
   assert.ok(labels.includes("诸葛亮 · 法术"));
   assert.equal(drawImageCalls, 1);
@@ -80,8 +111,9 @@ test("selected hero card uses an action frame and explicit selected label", func
     }
   });
   renderer.drawHeroScreen("zhuge", 1.2);
-  assert.ok(labels.includes("已选中"));
-  assert.ok(labels.includes("确认武将"));
+  assert.ok(labels.includes("当前"));
+  assert.ok(labels.includes("点击下方武将即可立即换将"));
+  assert.equal(labels.includes("确认武将"), false);
   assert.ok(sourceFrames.some(function (sourceX) { return sourceX >= 384 * 3; }));
 });
 

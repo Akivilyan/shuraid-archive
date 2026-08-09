@@ -134,6 +134,34 @@ test("Huang Zhong uses the dedicated showcase instead of enlarging the battle sk
   assert.equal(showcaseDraws, 1);
 });
 
+test("hero selection renders its own full-page artwork without the old camp background", function () {
+  var context = makeContext();
+  var homeImage = { width: 750, height: 1624 };
+  var showcase = { width: 720, height: 1080 };
+  var homeDraws = 0;
+  var fullPageDraws = 0;
+  context.drawImage = function (image) {
+    if (image === homeImage) { homeDraws += 1; }
+    if (image === showcase && arguments[5] === 0 && arguments[6] === 0 && arguments[7] === 375) {
+      fullPageDraws += 1;
+    }
+  };
+  var renderer = new Renderer(context, 375, 812, {
+    safeTop: 44,
+    safeBottom: 20,
+    playTop: 110,
+    heroShowcases: { huang: showcase }
+  });
+  renderer.render(makeHomeWorld("huang"), null, {
+    screen: "hero",
+    homeImage: homeImage,
+    settings: {},
+    elapsed: 1.2
+  });
+  assert.equal(homeDraws, 0);
+  assert.equal(fullPageDraws, 1);
+});
+
 test("the articulated rig renders every hero without a Canvas error", function () {
   var renderer = new Renderer(makeContext(), 375, 812, { safeTop: 44, playTop: 110 });
   ["guan", "huang", "zhuge"].forEach(function (heroId) {

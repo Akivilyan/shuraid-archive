@@ -32,14 +32,20 @@ function roundedRect(ctx, x, y, width, height, radius) {
 
 Renderer.prototype.render = function (world, joystick, ui) {
   if (ui && ui.screen !== "battle") {
-    this.drawHomeBase(ui.homeImage);
-    if (ui.screen === "settings") {
-      this.drawSettingsScreen(ui.settings);
+    if (ui.screen === "hero") {
+      this.drawHeroPageBase(world.heroId);
+      this.drawShellHeader(true);
+      this.drawHeroScreen(world.heroId, ui.elapsed || 0);
+      this.drawBottomNav("hero");
     } else {
-      this.drawShellHeader();
-      if (ui.screen === "hero") { this.drawHeroScreen(world.heroId, ui.elapsed || 0); }
-      else { this.drawHomeScreen(world, ui.elapsed || 0); }
-      this.drawBottomNav(ui.screen === "hero" ? "hero" : "home");
+      this.drawHomeBase(ui.homeImage);
+      if (ui.screen === "settings") {
+        this.drawSettingsScreen(ui.settings);
+      } else {
+        this.drawShellHeader(false);
+        this.drawHomeScreen(world, ui.elapsed || 0);
+        this.drawBottomNav("home");
+      }
     }
     return;
   }
@@ -90,6 +96,33 @@ Renderer.prototype.drawHomeBase = function (image) {
     }
     ctx.drawImage(image, sourceX, sourceY, sourceWidth, sourceHeight, 0, 0, this.width, this.height);
   }
+};
+
+Renderer.prototype.drawHeroPageBase = function (heroId) {
+  var ctx = this.context;
+  var layout = this.getShellLayout();
+  var themes = {
+    guan: { base: "#246b4b", glow: "rgba(245, 190, 64, 0.34)" },
+    huang: { base: "#896221", glow: "rgba(255, 222, 105, 0.34)" },
+    zhuge: { base: "#397f86", glow: "rgba(174, 238, 223, 0.34)" }
+  };
+  var theme = themes[heroId] || themes.guan;
+  ctx.clearRect(0, 0, this.width, this.height);
+  ctx.fillStyle = theme.base;
+  ctx.fillRect(0, 0, this.width, this.height);
+  var hasShowcase = this.drawHeroShowcase(heroId, 0, 0, this.width, layout.navY + 4, 0);
+  if (!hasShowcase) {
+    ctx.fillStyle = theme.glow;
+    ctx.beginPath(); ctx.arc(this.width / 2, layout.contentTop + 190, this.width * 0.58, 0, Math.PI * 2); ctx.fill();
+    ctx.strokeStyle = "rgba(255, 246, 193, 0.32)";
+    ctx.lineWidth = 3;
+    for (var radius = 76; radius <= 210; radius += 44) {
+      ctx.beginPath(); ctx.arc(this.width / 2, layout.contentTop + 190, radius, 0, Math.PI * 2); ctx.stroke();
+    }
+  }
+  ctx.fillStyle = "rgba(33, 25, 17, 0.14)";
+  ctx.fillRect(0, 0, this.width, layout.contentTop - 2);
+  return hasShowcase;
 };
 
 Renderer.prototype.drawHeroPortrait = function (heroId, x, baselineY, height, selected, elapsed) {
@@ -220,15 +253,15 @@ Renderer.prototype.getShellLayout = function () {
   };
 };
 
-Renderer.prototype.drawShellHeader = function () {
+Renderer.prototype.drawShellHeader = function (onArtwork) {
   var ctx = this.context;
   var layout = this.getShellLayout();
   ctx.textAlign = "left";
   ctx.font = "bold 23px sans-serif";
   ctx.lineWidth = 5;
-  ctx.strokeStyle = "rgba(255, 249, 218, 0.98)";
+  ctx.strokeStyle = onArtwork ? "rgba(52, 37, 20, 0.8)" : "rgba(255, 249, 218, 0.98)";
   ctx.strokeText("报，蜀军来劫粮", 18, layout.headerY + 34);
-  ctx.fillStyle = "#3d793f";
+  ctx.fillStyle = onArtwork ? "#fff5c5" : "#3d793f";
   ctx.fillText("报，蜀军来劫粮", 18, layout.headerY + 34);
 
   roundedRect(ctx, this.width - 58, layout.headerY + 2, 48, 48, 20);
@@ -345,12 +378,8 @@ Renderer.prototype.drawHeroScreen = function (selectedHeroId, elapsed) {
   var y = layout.y;
   var width = layout.width;
   var height = layout.height;
-  roundedRect(ctx, x, y, width, height, 24);
-  ctx.fillStyle = "rgba(255, 248, 218, 0.97)"; ctx.fill();
-  var showcaseHeight = layout.choiceTop - y - 10;
-  var hasShowcase = this.drawHeroShowcase(selectedHeroId, x + 4, y + 4, width - 8, showcaseHeight, 20);
-  roundedRect(ctx, x, y, width, height, 24);
-  ctx.strokeStyle = "#d58c19"; ctx.lineWidth = 4; ctx.stroke();
+  var showcase = this.heroShowcases[selectedHeroId];
+  var hasShowcase = !!(showcase && showcase.width && showcase.height);
   var cards = this.getHeroCards();
   var selectedCard = cards[0];
   for (var selectedIndex = 0; selectedIndex < cards.length; selectedIndex += 1) {
@@ -358,30 +387,29 @@ Renderer.prototype.drawHeroScreen = function (selectedHeroId, elapsed) {
   }
 
   ctx.textAlign = "center";
-  ctx.fillStyle = "#80501d";
+  roundedRect(ctx, this.width / 2 - 76, y + 4, 152, 32, 15);
+  ctx.fillStyle = "rgba(40, 29, 18, 0.66)"; ctx.fill();
+  ctx.fillStyle = "#fff0b3";
   ctx.font = "bold 15px sans-serif";
-  if (hasShowcase) {
-    roundedRect(ctx, this.width / 2 - 76, y + 10, 152, 32, 15);
-    ctx.fillStyle = "rgba(52, 36, 19, 0.66)"; ctx.fill();
-    ctx.fillStyle = "#fff0b3";
-  }
-  ctx.fillText("当前出阵武将", this.width / 2, y + 30);
+  ctx.fillText("当前出阵武将", this.width / 2, y + 26);
   if (!hasShowcase) {
     this.drawHeroPortrait(selectedHeroId, this.width / 2, layout.portraitBottom - 18, Math.min(216, height * 0.42), true, elapsed);
-  } else {
-    roundedRect(ctx, x + 40, layout.portraitBottom - 12, width - 80, 84, 20);
-    ctx.fillStyle = "rgba(43, 30, 18, 0.72)"; ctx.fill();
   }
-  ctx.fillStyle = hasShowcase ? "#fff9e8" : "#40301f";
+  roundedRect(ctx, x + 40, layout.portraitBottom - 12, width - 80, 84, 20);
+  ctx.fillStyle = "rgba(43, 30, 18, 0.74)"; ctx.fill();
+  ctx.fillStyle = "#fff9e8";
   ctx.font = "bold 25px sans-serif";
   ctx.fillText(selectedCard.name, this.width / 2, layout.portraitBottom + 12);
-  ctx.fillStyle = hasShowcase ? "#ffe071" : selectedCard.color;
+  ctx.fillStyle = "#ffe071";
   ctx.font = "bold 15px sans-serif";
   ctx.fillText(selectedCard.type + " · " + selectedCard.note, this.width / 2, layout.portraitBottom + 38);
-  ctx.fillStyle = hasShowcase ? "#fff0c6" : "#7b684b";
+  ctx.fillStyle = "#fff0c6";
   ctx.font = "14px sans-serif";
   ctx.fillText("点击下方武将即可立即换将", this.width / 2, layout.portraitBottom + 64);
 
+  roundedRect(ctx, x + 4, layout.choiceTop - 12, width - 8, layout.choiceHeight + 24, 22);
+  ctx.fillStyle = "rgba(255, 248, 218, 0.94)"; ctx.fill();
+  ctx.strokeStyle = "rgba(202, 126, 20, 0.9)"; ctx.lineWidth = 3; ctx.stroke();
   var cardWidth = (width - 32 - layout.choiceGap * 2) / 3;
   for (var index = 0; index < cards.length; index += 1) {
     var card = cards[index];

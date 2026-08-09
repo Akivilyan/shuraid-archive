@@ -12,6 +12,7 @@ function Renderer(context, width, height, options) {
   this.playTop = options.playTop || 74;
   this.enemyAtlases = options.enemyAtlases || {};
   this.heroAtlases = options.heroAtlases || {};
+  this.heroShowcases = options.heroShowcases || {};
 }
 
 function roundedRect(ctx, x, y, width, height, radius) {
@@ -119,6 +120,31 @@ Renderer.prototype.drawHeroPortrait = function (heroId, x, baselineY, height, se
   ctx.restore();
 };
 
+Renderer.prototype.drawHeroShowcase = function (heroId, x, y, width, height, radius) {
+  var image = this.heroShowcases[heroId];
+  if (!image || !image.width || !image.height) { return false; }
+  var sourceRatio = image.width / image.height;
+  var targetRatio = width / height;
+  var sourceX = 0;
+  var sourceY = 0;
+  var sourceWidth = image.width;
+  var sourceHeight = image.height;
+  if (sourceRatio > targetRatio) {
+    sourceWidth = image.height * targetRatio;
+    sourceX = (image.width - sourceWidth) / 2;
+  } else {
+    sourceHeight = image.width / targetRatio;
+    sourceY = (image.height - sourceHeight) / 2;
+  }
+  var ctx = this.context;
+  ctx.save();
+  roundedRect(ctx, x, y, width, height, radius);
+  ctx.clip();
+  ctx.drawImage(image, sourceX, sourceY, sourceWidth, sourceHeight, x, y, width, height);
+  ctx.restore();
+  return true;
+};
+
 Renderer.prototype.drawHomeScreen = function (world, elapsed) {
   var ctx = this.context;
   var layout = this.getShellLayout();
@@ -131,23 +157,32 @@ Renderer.prototype.drawHomeScreen = function (world, elapsed) {
 
   roundedRect(ctx, panelX, panelY, panelWidth, panelHeight, 26);
   ctx.fillStyle = "rgba(255, 249, 221, 0.97)"; ctx.fill();
+  var hasShowcase = this.drawHeroShowcase(world.hero.id, panelX + 4, panelY + 4, panelWidth - 8, panelHeight - 8, 22);
+  roundedRect(ctx, panelX, panelY, panelWidth, panelHeight, 26);
   ctx.strokeStyle = "#d58c19"; ctx.lineWidth = 4; ctx.stroke();
   roundedRect(ctx, panelX + 7, panelY + 7, panelWidth - 14, panelHeight - 14, 20);
   ctx.strokeStyle = "rgba(255, 214, 104, 0.9)"; ctx.lineWidth = 2; ctx.stroke();
 
+  if (hasShowcase) {
+    roundedRect(ctx, panelX + 12, panelY + 12, panelWidth - 24, 94, 16);
+    ctx.fillStyle = "rgba(57, 39, 20, 0.5)"; ctx.fill();
+  }
+
   ctx.textAlign = "center";
-  ctx.fillStyle = "#8b4c11";
+  ctx.fillStyle = hasShowcase ? "#ffeaa0" : "#8b4c11";
   ctx.font = "bold 15px sans-serif";
   ctx.fillText("第一关 · 粮道奇袭", this.width / 2, panelY + 34);
-  ctx.fillStyle = "#3e3425";
+  ctx.fillStyle = hasShowcase ? "#fffaf0" : "#3e3425";
   ctx.font = "bold 27px sans-serif";
   ctx.fillText("夜袭敌军粮道", this.width / 2, panelY + 68);
-  ctx.fillStyle = "#7b6646";
+  ctx.fillStyle = hasShowcase ? "#fff2c7" : "#7b6646";
   ctx.font = "14px sans-serif";
   ctx.fillText("预计 5 分钟  ·  自动攻击", this.width / 2, panelY + 94);
 
-  var portraitHeight = Math.min(206, panelHeight * 0.54);
-  this.drawHeroPortrait(world.hero.id, this.width / 2, panelY + panelHeight - 52, portraitHeight, false, elapsed);
+  if (!hasShowcase) {
+    var portraitHeight = Math.min(206, panelHeight * 0.54);
+    this.drawHeroPortrait(world.hero.id, this.width / 2, panelY + panelHeight - 52, portraitHeight, false, elapsed);
+  }
   roundedRect(ctx, panelX + 54, panelY + panelHeight - 54, panelWidth - 108, 40, 18);
   ctx.fillStyle = "rgba(75, 53, 31, 0.9)"; ctx.fill();
   ctx.fillStyle = "#fff8d8";
@@ -312,6 +347,9 @@ Renderer.prototype.drawHeroScreen = function (selectedHeroId, elapsed) {
   var height = layout.height;
   roundedRect(ctx, x, y, width, height, 24);
   ctx.fillStyle = "rgba(255, 248, 218, 0.97)"; ctx.fill();
+  var showcaseHeight = layout.choiceTop - y - 10;
+  var hasShowcase = this.drawHeroShowcase(selectedHeroId, x + 4, y + 4, width - 8, showcaseHeight, 20);
+  roundedRect(ctx, x, y, width, height, 24);
   ctx.strokeStyle = "#d58c19"; ctx.lineWidth = 4; ctx.stroke();
   var cards = this.getHeroCards();
   var selectedCard = cards[0];
@@ -322,15 +360,25 @@ Renderer.prototype.drawHeroScreen = function (selectedHeroId, elapsed) {
   ctx.textAlign = "center";
   ctx.fillStyle = "#80501d";
   ctx.font = "bold 15px sans-serif";
+  if (hasShowcase) {
+    roundedRect(ctx, this.width / 2 - 76, y + 10, 152, 32, 15);
+    ctx.fillStyle = "rgba(52, 36, 19, 0.66)"; ctx.fill();
+    ctx.fillStyle = "#fff0b3";
+  }
   ctx.fillText("当前出阵武将", this.width / 2, y + 30);
-  this.drawHeroPortrait(selectedHeroId, this.width / 2, layout.portraitBottom - 18, Math.min(216, height * 0.42), true, elapsed);
-  ctx.fillStyle = "#40301f";
+  if (!hasShowcase) {
+    this.drawHeroPortrait(selectedHeroId, this.width / 2, layout.portraitBottom - 18, Math.min(216, height * 0.42), true, elapsed);
+  } else {
+    roundedRect(ctx, x + 40, layout.portraitBottom - 12, width - 80, 84, 20);
+    ctx.fillStyle = "rgba(43, 30, 18, 0.72)"; ctx.fill();
+  }
+  ctx.fillStyle = hasShowcase ? "#fff9e8" : "#40301f";
   ctx.font = "bold 25px sans-serif";
   ctx.fillText(selectedCard.name, this.width / 2, layout.portraitBottom + 12);
-  ctx.fillStyle = selectedCard.color;
+  ctx.fillStyle = hasShowcase ? "#ffe071" : selectedCard.color;
   ctx.font = "bold 15px sans-serif";
   ctx.fillText(selectedCard.type + " · " + selectedCard.note, this.width / 2, layout.portraitBottom + 38);
-  ctx.fillStyle = "#7b684b";
+  ctx.fillStyle = hasShowcase ? "#fff0c6" : "#7b684b";
   ctx.font = "14px sans-serif";
   ctx.fillText("点击下方武将即可立即换将", this.width / 2, layout.portraitBottom + 64);
 
@@ -348,7 +396,10 @@ Renderer.prototype.drawHeroScreen = function (selectedHeroId, elapsed) {
       roundedRect(ctx, cardX + 5, cardY + selectedLift + 5, cardWidth - 10, layout.choiceHeight - 10, 13);
       ctx.strokeStyle = "rgba(255, 255, 234, 0.92)"; ctx.lineWidth = 2; ctx.stroke();
     }
-    this.drawHeroPortrait(card.id, cardX + cardWidth / 2, cardY + 70 + selectedLift, 58, false, elapsed);
+    var hasThumbnail = this.drawHeroShowcase(card.id, cardX + cardWidth / 2 - 29, cardY + 10 + selectedLift, 58, 58, 29);
+    if (!hasThumbnail) {
+      this.drawHeroPortrait(card.id, cardX + cardWidth / 2, cardY + 70 + selectedLift, 58, false, elapsed);
+    }
     ctx.textAlign = "center";
     ctx.fillStyle = "#4b351f";
     ctx.font = "bold 14px sans-serif";

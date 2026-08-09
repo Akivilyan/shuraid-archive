@@ -44,6 +44,7 @@ function WeChatGame() {
   this.bunThrowerImage = loadImage("assets/runtime/bun-thrower-atlas.png");
   this.guanImage = loadImage("assets/runtime/guan-atlas.png");
   this.zhugeImage = loadImage("assets/runtime/zhuge-atlas.png");
+  this.huangShowcaseImage = loadImage("assets/runtime/huang-showcase-v1.jpg");
   this.renderer = new Renderer(this.context, this.width, this.height, {
     safeTop: this.safeTop,
     safeBottom: this.safeBottom,
@@ -54,7 +55,8 @@ function WeChatGame() {
       potLidGuard: this.potLidGuardImage,
       bunThrower: this.bunThrowerImage
     },
-    heroAtlases: { guan: this.guanImage, zhuge: this.zhugeImage }
+    heroAtlases: { guan: this.guanImage, zhuge: this.zhugeImage },
+    heroShowcases: { huang: this.huangShowcaseImage }
   });
   this.screen = "home";
   this.previousScreen = "home";

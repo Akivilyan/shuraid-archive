@@ -117,6 +117,23 @@ test("selected hero card uses an action frame and explicit selected label", func
   assert.ok(sourceFrames.some(function (sourceX) { return sourceX >= 384 * 3; }));
 });
 
+test("Huang Zhong uses the dedicated showcase instead of enlarging the battle skeleton", function () {
+  var context = makeContext();
+  var showcaseDraws = 0;
+  var showcase = { width: 720, height: 1080 };
+  context.drawImage = function (image) {
+    if (image === showcase) { showcaseDraws += 1; }
+  };
+  var renderer = new Renderer(context, 375, 812, {
+    safeTop: 44,
+    safeBottom: 20,
+    playTop: 110,
+    heroShowcases: { huang: showcase }
+  });
+  renderer.drawHomeScreen(makeHomeWorld("huang"), 1.2);
+  assert.equal(showcaseDraws, 1);
+});
+
 test("the articulated rig renders every hero without a Canvas error", function () {
   var renderer = new Renderer(makeContext(), 375, 812, { safeTop: 44, playTop: 110 });
   ["guan", "huang", "zhuge"].forEach(function (heroId) {

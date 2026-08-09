@@ -17,6 +17,18 @@ test("the accepted cartoon home screen is compact and the rejected realistic dra
   assert.equal(fs.existsSync(rejected), false);
 });
 
+test("the Huang Zhong comedy showcase keeps a high-resolution master and compact runtime copy", function () {
+  var root = path.join(__dirname, "..");
+  var master = fs.readFileSync(path.join(root, "assets", "concepts", "hero-huang-chicken-showcase-v1.png"));
+  var runtime = fs.readFileSync(path.join(root, "assets", "runtime", "huang-showcase-v1.jpg"));
+  assert.equal(master.toString("ascii", 1, 4), "PNG");
+  assert.equal(master.readUInt32BE(16), 1024);
+  assert.equal(master.readUInt32BE(20), 1536);
+  assert.equal(runtime[0], 0xff);
+  assert.equal(runtime[1], 0xd8);
+  assert.ok(runtime.length < 180 * 1024);
+});
+
 test("the pushed stove enemy atlas contains five normalized animation frames", function () {
   var atlas = path.join(__dirname, "..", "assets", "sprites", "enemies", "pushed-stove", "pushed-stove-atlas.png");
   var data = fs.readFileSync(atlas);

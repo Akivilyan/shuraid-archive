@@ -294,9 +294,6 @@ export class BattleWorld {
     const targetDistance = Math.sqrt(targetOffsetX * targetOffsetX + targetOffsetY * targetOffsetY);
     const facingX = targetDistance > 0.0001 ? targetOffsetX / targetDistance : this.player.facingX;
     const facingY = targetDistance > 0.0001 ? targetOffsetY / targetDistance : this.player.facingY;
-    this.player.facingX = facingX;
-    this.player.facingY = facingY;
-
     for (let index = 0; index < this.enemies.length; index += 1) {
       const enemy = this.enemies[index];
       if (!enemy.active) {

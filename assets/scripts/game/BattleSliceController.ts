@@ -41,9 +41,6 @@ export class BattleSliceController extends Component {
   @property(SpriteFrame)
   public chefAtlas: SpriteFrame | null = null;
 
-  @property(SpriteFrame)
-  public guandaoFrame: SpriteFrame | null = null;
-
   private readonly world = new BattleWorld();
   private readonly runner = new FixedStepRunner(this.world);
   private readonly touchStart = new Vec2();
@@ -67,7 +64,6 @@ export class BattleSliceController extends Component {
       || this.hudNode === null
       || this.guanAtlas === null
       || this.chefAtlas === null
-      || this.guandaoFrame === null
     ) {
       throw new Error('BattleSlice scene references are incomplete.');
     }
@@ -78,7 +74,6 @@ export class BattleSliceController extends Component {
       this.slashLayer,
       this.guanAtlas,
       this.chefAtlas,
-      this.guandaoFrame,
     );
 
     let hudTransform = this.hudNode.getComponent(UITransform);

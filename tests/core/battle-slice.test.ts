@@ -80,6 +80,20 @@ test('automatic attack stays idle without a target and fires after a chef enters
   assert.equal(attack.halfAngle, GREEN_DRAGON_HALF_ANGLE);
 });
 
+test('automatic attack does not overwrite the movement-facing snapshot for one frame', () => {
+  const world = new BattleWorld();
+  world.setMovement(1, 0);
+
+  for (let index = 0; index < 600 && world.getSnapshot().attack.serial === 0; index += 1) {
+    world.step(FIXED_STEP_SECONDS);
+  }
+
+  const snapshot = world.getSnapshot();
+  assert.equal(snapshot.attack.serial, 1);
+  assert.equal(snapshot.player.facingX, 1);
+  assert.equal(snapshot.player.facingY, 0);
+});
+
 test('fixed-step runner caps catch-up and clears accumulated time when paused', () => {
   let steps = 0;
   const runner = new FixedStepRunner({
@@ -98,4 +112,3 @@ test('fixed-step runner caps catch-up and clears accumulated time when paused', 
   runner.advance(FIXED_STEP_SECONDS);
   assert.equal(steps, 6);
 });
-

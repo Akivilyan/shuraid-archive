@@ -139,7 +139,6 @@
     "hudNode": { "__id__": 14 },
     "guanAtlas": { "__uuid__": "4a6bd7f7-fe8b-4bfb-b0ea-c0b7102d3240@f9941", "__expectedType__": "cc.SpriteFrame" },
     "chefAtlas": { "__uuid__": "844ad27d-5ff9-449f-afca-9da378307531@f9941", "__expectedType__": "cc.SpriteFrame" },
-    "guandaoFrame": { "__uuid__": "098cf1bf-234c-41e7-a238-15df32998bb2@f9941", "__expectedType__": "cc.SpriteFrame" },
     "_id": "a8H1kY4sC6mP2qR9vT3xZd"
   },
   {
@@ -336,4 +335,3 @@
   { "__type__": "cc.LightProbeInfo" },
   { "__type__": "cc.PostSettingsInfo" }
 ]
-

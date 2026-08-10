@@ -12,7 +12,7 @@
 | Cocos 移动 Web 构建 | 通过 | `platform=web-mobile`，Debug |
 | `npm run build:cocos:wechat` | 通过 | `platform=wechatgame`，Debug；生成 AppID 已读回为 `wxc99662ee0bfded03`；未上传 |
 | 移动 Web 运行日志 | 场景加载成功 | 无脚本错误；仅模板缺少 `favicon.ico` 的无关 404 |
-| 引擎裁剪 | 通过 | 未打包 Bullet、Box2D、Spine、音频等首切片未使用模块 |
+| 引擎裁剪 | 通过 | 保留普攻所需 `animation`、`graphics`、`tween`；未打包 Bullet、Box2D、Spine、音频等未使用模块 |
 
 ## 普攻转向跳帧修正
 
@@ -25,6 +25,12 @@
 - 普攻改为 Cocos `AnimationClip` 播放图集中的蓄力/横扫帧，攻击期间锁定攻击方向；移动动画由 4 FPS 提升至 8 FPS；
 - 独立长柄刀节点及场景引用已移除，改为真实半径和张角驱动的青绿金色弧光，弧光只在攻击事件触发时重绘一次，再由 Tween 扩散淡出；
 - 修正后已重新通过 6/6 测试、完整 Cocos TypeScript 严格检查和微信小游戏构建；尚待真机复测视觉手感。
+
+### 微信运行时模块修复
+
+- 首次改造包在微信开发者工具加载场景时出现 `TypeError: getComponent: Type must be non-nil`，调用点为 `playerVisualNode.addComponent(Animation)`；
+- 根因是引擎裁剪仍沿用旧配置，`animation`、`graphics`、`tween` 均被关闭；构建器允许脚本打包，但微信运行时对应导出为空；
+- 已启用三个必需模块，并把构建产物导出检查加入本阶段验证；灰度基础库 3.17.0、SharedArrayBuffer 和 shading scale 提示均不是本次场景激活失败的原因。
 
 Web 横屏烟测曾记录约 60 FPS、16.66 ms、5 Draw Call、16 个活动节点。该数据来自桌面浏览器，只能证明 HUD 工作，不能替代微信真机性能数据。
 

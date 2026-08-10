@@ -18,7 +18,7 @@
             "_value": false
           },
           "animation": {
-            "_value": false
+            "_value": true
           },
           "skeletal-animation": {
             "_value": false
@@ -42,7 +42,7 @@
             "_value": false
           },
           "graphics": {
-            "_value": false
+            "_value": true
           },
           "ui-skew": {
             "_value": false
@@ -128,7 +128,7 @@
             "_value": false
           },
           "tween": {
-            "_value": false
+            "_value": true
           },
           "websocket": {
             "_value": false
@@ -193,10 +193,13 @@
         "includeModules": [
           "2d",
           "affine-transform",
+          "animation",
           "base",
           "custom-pipeline",
           "gfx-webgl",
           "gfx-webgl2",
+          "graphics",
+          "tween",
           "ui"
         ],
         "noDeprecatedFeatures": {

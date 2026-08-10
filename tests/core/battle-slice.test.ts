@@ -2,11 +2,14 @@ import assert from 'node:assert/strict';
 import test from 'node:test';
 
 import {
+  CHEF_RADIUS,
   CHEF_INITIAL_COUNT,
   CHEF_POOL_CAPACITY,
   FIXED_STEP_SECONDS,
   GREEN_DRAGON_HALF_ANGLE,
+  GREEN_DRAGON_INTERVAL,
   GREEN_DRAGON_RANGE,
+  PLAYER_RADIUS,
   PLAYER_SPEED,
 } from '../../assets/scripts/core/BattleConfig';
 import { isPointInSector } from '../../assets/scripts/core/BattleMath';
@@ -65,16 +68,25 @@ test('Green Dragon Slash remains a bounded forward sector', () => {
   );
 });
 
-test('automatic attack stays idle without a target and fires after a chef enters range', () => {
+test('automatic attack keeps a fixed cadence without requiring a target', () => {
   const world = new BattleWorld();
-  world.step(FIXED_STEP_SECONDS);
-  assert.equal(world.getSnapshot().attack.serial, 0);
+  const snapshot = world.getSnapshot();
+  for (let index = 0; index < snapshot.enemies.length; index += 1) {
+    (snapshot.enemies[index] as { active: boolean }).active = false;
+  }
 
-  for (let index = 0; index < 600 && world.getSnapshot().attack.serial === 0; index += 1) {
+  world.step(FIXED_STEP_SECONDS);
+  assert.equal(snapshot.attack.serial, 1);
+
+  const stepsPerAttack = Math.round(GREEN_DRAGON_INTERVAL / FIXED_STEP_SECONDS);
+  for (let index = 1; index < stepsPerAttack; index += 1) {
     world.step(FIXED_STEP_SECONDS);
   }
-  const attack = world.getSnapshot().attack;
-  assert.equal(attack.serial, 1);
+  assert.equal(snapshot.attack.serial, 1);
+  world.step(FIXED_STEP_SECONDS);
+
+  const attack = snapshot.attack;
+  assert.equal(attack.serial, 2);
   assert.equal(attack.facingX, 0);
   assert.equal(attack.facingY, 1);
   assert.equal(attack.range, GREEN_DRAGON_RANGE);
@@ -97,39 +109,82 @@ test('Green Dragon Slash ignores enemies behind and attacks along player facing'
       previousX: number;
       previousY: number;
     };
-    if (!enemy.active) {
-      continue;
-    }
+    enemy.active = index === 0;
     enemy.x = player.x - 30;
     enemy.y = player.y;
     enemy.previousX = enemy.x;
     enemy.previousY = enemy.y;
   }
-  world.step(FIXED_STEP_SECONDS);
-  assert.equal(snapshot.attack.serial, 0);
-
-  for (let index = 0; index < snapshot.enemies.length; index += 1) {
-    const enemy = snapshot.enemies[index] as {
-      active: boolean;
-      x: number;
-      y: number;
-      previousX: number;
-      previousY: number;
-    };
-    if (!enemy.active) {
-      continue;
-    }
-    enemy.x = player.x + 30;
-    enemy.y = player.y;
-    enemy.previousX = enemy.x;
-    enemy.previousY = enemy.y;
+  const target = snapshot.enemies[0];
+  const healthBeforeBehindSlash = target.health;
+  const stepsPerAttack = Math.round(GREEN_DRAGON_INTERVAL / FIXED_STEP_SECONDS);
+  for (let index = 0; index < stepsPerAttack; index += 1) {
+    world.step(FIXED_STEP_SECONDS);
   }
-  world.step(FIXED_STEP_SECONDS);
-  assert.equal(snapshot.attack.serial, 1);
+  assert.equal(snapshot.attack.serial, 2);
+  assert.equal(target.health, healthBeforeBehindSlash);
+
+  const mutableTarget = target as {
+    x: number;
+    y: number;
+    previousX: number;
+    previousY: number;
+  };
+  mutableTarget.x = player.x + 30;
+  mutableTarget.y = player.y;
+  mutableTarget.previousX = mutableTarget.x;
+  mutableTarget.previousY = mutableTarget.y;
+  for (let index = 0; index < stepsPerAttack; index += 1) {
+    world.step(FIXED_STEP_SECONDS);
+  }
+  assert.equal(snapshot.attack.serial, 3);
+  assert.ok(target.health < healthBeforeBehindSlash);
   assert.equal(snapshot.attack.facingX, 1);
   assert.equal(snapshot.attack.facingY, 0);
   assert.equal(snapshot.player.facingX, 1);
   assert.equal(snapshot.player.facingY, 0);
+});
+
+test('circle separation prevents player-enemy and enemy-enemy overlap', () => {
+  const playerWorld = new BattleWorld();
+  const playerSnapshot = playerWorld.getSnapshot();
+  for (let index = 0; index < playerSnapshot.enemies.length; index += 1) {
+    const enemy = playerSnapshot.enemies[index] as {
+      active: boolean;
+      x: number;
+      y: number;
+    };
+    enemy.active = index === 0;
+    enemy.x = playerSnapshot.player.x;
+    enemy.y = playerSnapshot.player.y;
+  }
+  playerWorld.step(FIXED_STEP_SECONDS);
+  assert.ok(
+    Math.hypot(
+      playerSnapshot.enemies[0].x - playerSnapshot.player.x,
+      playerSnapshot.enemies[0].y - playerSnapshot.player.y,
+    ) >= PLAYER_RADIUS + CHEF_RADIUS - 0.0001,
+  );
+
+  const enemyWorld = new BattleWorld();
+  const enemySnapshot = enemyWorld.getSnapshot();
+  for (let index = 0; index < enemySnapshot.enemies.length; index += 1) {
+    const enemy = enemySnapshot.enemies[index] as {
+      active: boolean;
+      x: number;
+      y: number;
+    };
+    enemy.active = index < 2;
+    enemy.x = 100;
+    enemy.y = 100;
+  }
+  enemyWorld.step(FIXED_STEP_SECONDS);
+  assert.ok(
+    Math.hypot(
+      enemySnapshot.enemies[1].x - enemySnapshot.enemies[0].x,
+      enemySnapshot.enemies[1].y - enemySnapshot.enemies[0].y,
+    ) >= CHEF_RADIUS * 2 - 0.0001,
+  );
 });
 
 test('fixed-step runner caps catch-up and clears accumulated time when paused', () => {

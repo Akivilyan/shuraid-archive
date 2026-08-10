@@ -74,6 +74,8 @@ interface MutableBattleSnapshot extends BattleSnapshot {
 
 const SPAWN_X = [-168, 168, -142, 142, 0, 0, -174, 174];
 const SPAWN_Y = [330, -330, -342, 342, 360, -360, 180, -180];
+const COLLISION_SOLVER_PASSES = 2;
+const COLLISION_EPSILON = 0.0001;
 
 function clamp(value: number, minimum: number, maximum: number): number {
   return Math.max(minimum, Math.min(maximum, value));
@@ -190,6 +192,7 @@ export class BattleWorld {
     this.capturePreviousPositions();
     this.updatePlayer(deltaSeconds);
     this.updateEnemies(deltaSeconds);
+    this.resolveUnitCollisions();
     this.updateCombat(deltaSeconds);
   }
 
@@ -269,7 +272,6 @@ export class BattleWorld {
 
     const facingX = this.player.facingX;
     const facingY = this.player.facingY;
-    let hitAnyEnemy = false;
     for (let index = 0; index < this.enemies.length; index += 1) {
       const enemy = this.enemies[index];
       if (!enemy.active) {
@@ -288,13 +290,7 @@ export class BattleWorld {
       )) {
         continue;
       }
-      hitAnyEnemy = true;
       this.hitEnemy(enemy, GREEN_DRAGON_DAMAGE, facingX, facingY);
-    }
-
-    if (!hitAnyEnemy) {
-      this.attackCooldown = 0;
-      return;
     }
 
     this.attack.serial += 1;
@@ -303,6 +299,74 @@ export class BattleWorld {
     this.attack.facingX = facingX;
     this.attack.facingY = facingY;
     this.attackCooldown = GREEN_DRAGON_INTERVAL;
+  }
+
+  private resolveUnitCollisions(): void {
+    for (let pass = 0; pass < COLLISION_SOLVER_PASSES; pass += 1) {
+      this.resolveEnemyEnemyCollisions();
+      for (let index = 0; index < this.enemies.length; index += 1) {
+        const enemy = this.enemies[index];
+        if (enemy.active) {
+          this.separateEnemyFromPlayer(enemy);
+        }
+      }
+    }
+  }
+
+  private resolveEnemyEnemyCollisions(): void {
+    const minimumDistance = CHEF_RADIUS * 2;
+    const minimumDistanceSquared = minimumDistance * minimumDistance;
+    for (let firstIndex = 0; firstIndex < this.enemies.length; firstIndex += 1) {
+      const first = this.enemies[firstIndex];
+      if (!first.active) {
+        continue;
+      }
+      for (let secondIndex = firstIndex + 1; secondIndex < this.enemies.length; secondIndex += 1) {
+        const second = this.enemies[secondIndex];
+        if (!second.active) {
+          continue;
+        }
+        const offsetX = second.x - first.x;
+        const offsetY = second.y - first.y;
+        const distanceSquared = offsetX * offsetX + offsetY * offsetY;
+        if (distanceSquared >= minimumDistanceSquared) {
+          continue;
+        }
+        const distance = Math.sqrt(distanceSquared);
+        const fallbackAngle = (first.slot * 37 + second.slot * 61) * 0.73;
+        const normalX = distance > COLLISION_EPSILON
+          ? offsetX / distance
+          : Math.cos(fallbackAngle);
+        const normalY = distance > COLLISION_EPSILON
+          ? offsetY / distance
+          : Math.sin(fallbackAngle);
+        const correction = (minimumDistance - distance) * 0.5;
+        first.x -= normalX * correction;
+        first.y -= normalY * correction;
+        second.x += normalX * correction;
+        second.y += normalY * correction;
+      }
+    }
+  }
+
+  private separateEnemyFromPlayer(enemy: MutableEnemy): void {
+    const minimumDistance = PLAYER_RADIUS + CHEF_RADIUS;
+    const offsetX = enemy.x - this.player.x;
+    const offsetY = enemy.y - this.player.y;
+    const distanceSquared = offsetX * offsetX + offsetY * offsetY;
+    if (distanceSquared >= minimumDistance * minimumDistance) {
+      return;
+    }
+    const distance = Math.sqrt(distanceSquared);
+    const normalX = distance > COLLISION_EPSILON
+      ? offsetX / distance
+      : -this.player.facingX;
+    const normalY = distance > COLLISION_EPSILON
+      ? offsetY / distance
+      : -this.player.facingY;
+    const correction = minimumDistance - distance;
+    enemy.x += normalX * correction;
+    enemy.y += normalY * correction;
   }
 
   private hitEnemy(enemy: MutableEnemy, damage: number, facingX: number, facingY: number): void {

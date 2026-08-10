@@ -205,7 +205,9 @@ export class BattlePresenter {
     this.playerVisualNode.setScale(this.visualFacingSign, 1, 1);
 
     if (this.attackTime > 0) {
-      this.playPlayerAnimation(PLAYER_ATTACK_ANIMATION);
+      this.playPlayerAnimation(
+        player.moving ? PLAYER_MOVE_ANIMATION : PLAYER_ATTACK_ANIMATION,
+      );
       this.attackTime = Math.max(0, this.attackTime - frameDeltaSeconds);
       return;
     }
@@ -245,7 +247,6 @@ export class BattlePresenter {
 
   private beginAttack(attack: AttackSnapshot): void {
     this.attackTime = GREEN_DRAGON_VISUAL_SECONDS;
-    this.playPlayerAnimation(PLAYER_ATTACK_ANIMATION);
 
     Tween.stopAllByTarget(this.slashNode);
     Tween.stopAllByTarget(this.slashOpacity);
@@ -271,27 +272,56 @@ export class BattlePresenter {
 
   private drawSlashEffect(range: number, halfAngle: number): void {
     const radius = Math.max(12, range);
-    const startX = Math.cos(halfAngle) * radius;
-    const startY = -Math.sin(halfAngle) * radius;
-    this.slashOuter.clear();
-    this.slashOuter.fillColor = this.slashOuterColor;
-    this.slashOuter.moveTo(startX, startY);
-    this.slashOuter.arc(0, 0, radius, -halfAngle, halfAngle, false);
-    this.slashOuter.quadraticCurveTo(radius * 0.42, 0, startX, startY);
-    this.slashOuter.close();
-    this.slashOuter.fill();
+    this.drawCrescent(
+      this.slashOuter,
+      this.slashOuterColor,
+      radius,
+      halfAngle,
+      radius * 0.42,
+    );
+    this.drawCrescent(
+      this.slashInner,
+      this.slashInnerColor,
+      Math.max(8, radius - 10),
+      halfAngle * 0.8,
+      radius * 0.5,
+    );
+  }
 
-    const innerRadius = Math.max(8, radius - 10);
-    const innerHalfAngle = halfAngle * 0.8;
-    const innerStartX = Math.cos(innerHalfAngle) * innerRadius;
-    const innerStartY = -Math.sin(innerHalfAngle) * innerRadius;
-    this.slashInner.clear();
-    this.slashInner.fillColor = this.slashInnerColor;
-    this.slashInner.moveTo(innerStartX, innerStartY);
-    this.slashInner.arc(0, 0, innerRadius, -innerHalfAngle, innerHalfAngle, false);
-    this.slashInner.quadraticCurveTo(innerRadius * 0.56, 0, innerStartX, innerStartY);
-    this.slashInner.close();
-    this.slashInner.fill();
+  private drawCrescent(
+    graphics: Graphics,
+    color: Color,
+    radius: number,
+    halfAngle: number,
+    innerControlX: number,
+  ): void {
+    const segmentCount = 12;
+    const startAngle = -halfAngle;
+    const endAngle = halfAngle;
+    const startX = Math.cos(startAngle) * radius;
+    const startY = Math.sin(startAngle) * radius;
+    const endX = Math.cos(endAngle) * radius;
+    const endY = Math.sin(endAngle) * radius;
+
+    graphics.clear();
+    graphics.fillColor = color;
+    graphics.moveTo(startX, startY);
+    for (let segment = 1; segment <= segmentCount; segment += 1) {
+      const progress = segment / segmentCount;
+      const angle = startAngle + (endAngle - startAngle) * progress;
+      graphics.lineTo(Math.cos(angle) * radius, Math.sin(angle) * radius);
+    }
+    for (let segment = 1; segment <= segmentCount; segment += 1) {
+      const progress = segment / segmentCount;
+      const inverse = 1 - progress;
+      const curveX = inverse * inverse * endX
+        + 2 * inverse * progress * innerControlX
+        + progress * progress * startX;
+      const curveY = inverse * inverse * endY + progress * progress * startY;
+      graphics.lineTo(curveX, curveY);
+    }
+    graphics.close();
+    graphics.fill();
   }
 
   private playPlayerAnimation(name: string): void {

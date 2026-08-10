@@ -1,0 +1,10 @@
+{
+  "name": "shu-raid",
+  "uuid": "64c75e74-76d5-46f4-a187-1b73343d9bc0",
+  "version": "0.1.0",
+  "private": true,
+  "description": "A clean Cocos Creator rebuild of 报，蜀军来劫粮.",
+  "creator": {
+    "version": "3.8.8"
+  }
+}

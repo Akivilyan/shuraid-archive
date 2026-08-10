@@ -1,0 +1,12 @@
+library/
+temp/
+local/
+build/
+profiles/
+node_modules/
+*.log
+project.private.config.json
+.playwright-cli/
+output/
+Thumbs.db
+.DS_Store

@@ -4,12 +4,13 @@
 
 - 主项目：`M:\codex\ShuRaid2D`。
 - Cocos Creator：3.8.8，项目由官方 Empty (2D) 模板创建。
-- Git：仓库尚无首次提交；当前项目骨架、空场景与文档均未跟踪。
-- 当前阶段：`CONTENT-MIGRATION.md` 的阶段 0——空工程基线已完成，准备进入阶段 1。
-- `assets/Bootstrap.scene` 是当前唯一场景；除对应新 `.meta` 外，没有 Prefab、脚本、图片、音频或其它迁入资源。
+- Git：阶段 0 基线已提交为 `9dc40e9 PROJECT-BASELINE: establish clean Cocos WeChat baseline`。
+- 当前阶段：`CONTENT-MIGRATION.md` 的阶段 1——第一名人物，已确定为关羽。
+- `assets/Bootstrap.scene` 是当前唯一场景；阶段 1 已迁入关羽待机、移动、攻击和受击所需的六张独立透明 PNG，并完成四个 AnimationClip、`GuanYu.prefab` 及场景内原生关羽节点。
+- 项目扩展 `extensions/shuraid-editor-tools` 只在菜单命令触发时运行，不在项目启动时自动切换或保存场景，避免弹出未命名场景保存框。
 - Cocos 编辑器已经识别项目，生成了本地 `library/`、`temp/` 和 `profiles/` 目录。
 - 2026-08-11 已使用 Cocos Creator 3.8.8 CLI 完成微信小游戏 Release 构建，官方成功退出码为 36。
-- Release 产物位于 `build/wechatgame`：`debug=false`、竖屏、30 个文件、2,966,303 字节（约 2.829 MiB）。
+- 最新 Release 产物位于 `build/wechatgame`：`debug=false`、竖屏、48 个文件、3,636,252 字节（约 3.468 MiB）；六张关羽纹理均已进入构建包。
 - 微信开发者工具 CLI 已成功导入并打开该本地构建包；未执行预览、上传或发布。
 - 源工程边界扫描未发现 `project.config.json`、`game.json`、`app.js`、`build-templates` 或原生微信小游戏源码；这些文件只存在于 Cocos 生成的 `build/` 产物中。
 - 用户已在微信开发者工具中确认空场景正常启动且控制台无持续错误。
@@ -20,7 +21,7 @@
 
 ## 当前切片
 
-只完成空工程的微信小游戏 Release 性能基线：
+阶段 0 的空工程微信小游戏 Release 性能基线已完成：
 
 1. [x] 在 Cocos 编辑器中原生创建并保存一个空 Scene；
 2. [x] 使用保存的微信小游戏 Release 配置完成 Cocos CLI 构建；
@@ -28,7 +29,15 @@
 4. [x] 由用户手动确认空场景正常启动且控制台无持续错误；
 5. [x] 记录 Release 包体与工程边界；玩法性能和真机手感留到首个可玩切片验证。
 
-本切片不迁入角色、场景美术、敌人、攻击反馈、音频或旧运行时代码。
+阶段 1 的人物资源基础已完成：
+
+1. [x] 迁入关羽当前马上需要的六张独立动作帧；
+2. [x] 由 Cocos 生成全新 SpriteFrame 元数据；
+3. [x] 创建待机、移动、普攻、受击四个原生 AnimationClip；
+4. [x] 创建 `GuanYu.prefab`，Sprite 使用 `RAW` Size Mode；
+5. [x] 在 `Bootstrap.scene` 中放置关羽原生节点并完成 Release 构建验证。
+
+尚未实现移动输入、敌人、攻击判定、攻击反馈、音频或旧运行时代码。
 
 ## 实现边界
 
@@ -41,4 +50,4 @@
 
 ## 下一步
 
-阶段 0 已完成。下一步进入阶段 1，先选择第一名人物，并确认其待机、移动、攻击和受击所需的最小资源集合；迁移前必须记录来源、用途和目标路径。首个可玩切片仍以“移动 + 一种敌人 + 普攻”的真机流畅度为验收门槛。
+阶段 0 和阶段 1 的关羽资源基础已完成，迁移明细见 `docs/MIGRATION-LOG.md`。下一步实现连续单指移动与动画状态切换，再迁入一种敌人并接入普攻。首个可玩切片仍以“移动 + 一种敌人 + 普攻”的真机流畅度为验收门槛；当前自动构建成功不代表真机验收完成。

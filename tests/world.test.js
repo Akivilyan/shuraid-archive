@@ -50,7 +50,7 @@ test("unoffered skills cannot be selected", function () {
   world.reset();
   world.gainExperience(world.experienceNeeded);
   var offeredIds = world.offers.map(function (offer) { return offer.id; });
-  var notOffered = ["blade", "whirlwind", "crescent", "firetrail", "might", "haste", "vitality"].filter(function (id) {
+  var notOffered = ["blade", "bladeSweep", "ringblade", "warmWine", "might", "haste", "vitality"].filter(function (id) {
     return offeredIds.indexOf(id) < 0;
   })[0];
   assert.equal(world.chooseSkill(notOffered), false);
@@ -66,21 +66,142 @@ test("the automatic blade attack kills a nearby weak enemy and drops experience"
   world.performBladeAttack();
   assert.equal(world.enemies.length, 0);
   assert.equal(world.orbs.length, 1);
+  assert.equal(world.orbs[0].value, 2);
   assert.equal(world.kills, 1);
 });
 
-test("rank-three blade visibly becomes a full-circle attack", function () {
+test("Guan Yu stays idle and silent when no enemy is inside blade range", function () {
   var world = new World(375, 812, fixedRandom);
   world.reset();
-  world.ranks.blade = 3;
-  var enemyBehind = world.makeEnemy("grunt", world.player.x, world.player.y + 60);
-  enemyBehind.health = 1;
-  world.enemies.push(enemyBehind);
-  world.player.facing = { x: 0, y: -1 };
+  world.enemies.push(world.makeEnemy("grunt", world.player.x + 200, world.player.y));
+  world.updateCombat(0.01);
+  assert.equal(world.player.actionTime, 0);
+  assert.equal(world.player.attackCooldown, 0);
+  assert.equal(world.slashes.length, 0);
+  assert.deepEqual(world.consumeAudioEvents(), []);
+});
+
+test("Guan Yu's automatic slash does not replace his direction-neutral holding pose", function () {
+  var world = new World(375, 812, fixedRandom);
+  world.reset();
+  var enemy = world.makeEnemy("brute", world.player.x, world.player.y - 60);
+  world.enemies.push(enemy);
+  assert.equal(world.performBaseAttack(), true);
+  assert.equal(world.player.actionTime, 0);
+  assert.ok(world.consumeAudioEvents().includes("attack"));
+});
+
+test("Green Dragon Slash is a bounded forward sector instead of a linear strike", function () {
+  var world = new World(375, 812, fixedRandom);
+  world.reset();
+  var anchor = world.makeEnemy("brute", world.player.x, world.player.y - 40);
+  var inside = world.makeEnemy("grunt", world.player.x + 30, world.player.y - 64);
+  var outside = world.makeEnemy("grunt", world.player.x + 50, world.player.y - 50);
+  var behind = world.makeEnemy("grunt", world.player.x, world.player.y + 50);
+  anchor.health = anchor.maxHealth = 200;
+  inside.health = outside.health = behind.health = 1;
+  world.enemies.push(anchor, inside, outside, behind);
   world.performBladeAttack();
-  assert.equal(world.enemies.includes(enemyBehind), false);
-  assert.equal(world.slashes.length, 2);
+  assert.equal(world.enemies.includes(inside), false);
+  assert.equal(world.enemies.includes(outside), true);
+  assert.equal(world.enemies.includes(behind), true);
+  assert.equal(world.slashes.length, 1);
+  assert.equal(world.slashes[0].shape, "sector");
+  assert.equal(world.slashes[0].full, false);
+  assert.equal(world.slashes[0].followPlayer, true);
+  assert.equal(world.slashes[0].range, 112);
+  assert.equal(world.slashes[0].halfAngle, 0.48);
+  world.player.x += 24;
+  world.player.y -= 16;
+  world.updateEffects(0.01);
+  assert.equal(world.slashes[0].x, world.player.x);
+  assert.equal(world.slashes[0].y, world.player.y);
+});
+
+test("Green Dragon Presence expands the fan without reaching a half circle", function () {
+  function makeSweepWorld(sweepRank) {
+    var world = new World(375, 812, fixedRandom);
+    world.reset();
+    world.ranks.bladeSweep = sweepRank;
+    var anchor = world.makeEnemy("brute", world.player.x, world.player.y - 45);
+    var edge = world.makeEnemy("grunt", world.player.x + 72, world.player.y - 102);
+    anchor.health = anchor.maxHealth = 200;
+    edge.health = 1;
+    world.enemies.push(anchor, edge);
+    world.performBladeAttack();
+    return { world: world, edge: edge };
+  }
+  var base = makeSweepWorld(0);
+  var maximum = makeSweepWorld(3);
+  assert.equal(base.world.enemies.includes(base.edge), true);
+  assert.equal(maximum.world.enemies.includes(maximum.edge), false);
+  assert.equal(maximum.world.slashes[0].range, 130);
+  assert.equal(maximum.world.slashes[0].halfAngle, 0.66);
+  assert.ok(maximum.world.slashes[0].halfAngle < Math.PI / 4);
+});
+
+test("Green Dragon Ring Slash carries fixed defensive timing and rendering data", function () {
+  var world = new World(375, 812, fixedRandom);
+  world.reset();
+  var enemy = world.makeEnemy("grunt", world.player.x + 40, world.player.y);
+  enemy.health = 200;
+  enemy.maxHealth = 200;
+  world.enemies.push(enemy);
+  world.ranks.ringblade = 2;
+  world.performRingBlade();
+  assert.equal(enemy.health, 142);
+  assert.equal(world.slashes[0].shape, "ringblade");
+  assert.equal(world.slashes[0].range, 150);
   assert.equal(world.slashes[0].full, true);
+  assert.equal(world.slashes[0].followPlayer, true);
+  assert.equal(world.slashes[0].rotations, 2);
+  assert.equal(world.slashes[0].maxLife, 0.92);
+  world.player.x -= 20;
+  world.updateEffects(0.01);
+  assert.equal(world.slashes[0].x, world.player.x);
+
+  world.slashes.length = 0;
+  world.player.skillCooldowns = {};
+  world.updateCombat(0.6);
+  assert.equal(world.slashes.some(function (slash) { return slash.shape === "ringblade"; }), true);
+  assert.equal(world.player.skillCooldowns.ringblade, 10);
+});
+
+test("Warm Wine Slash targets the densest enemy lane while Guan Yu stays put", function () {
+  var world = new World(375, 812, fixedRandom);
+  world.reset();
+  world.ranks.warmWine = 1;
+  var startX = world.player.x;
+  var startY = world.player.y;
+  var nearest = world.makeEnemy("brute", startX, startY - 60);
+  var laneNear = world.makeEnemy("grunt", startX + 100, startY);
+  var laneMiddle = world.makeEnemy("grunt", startX + 180, startY + 8);
+  var laneFar = world.makeEnemy("grunt", startX + 250, startY - 8);
+  nearest.health = nearest.maxHealth = 200;
+  laneNear.health = laneMiddle.health = laneFar.health = 1;
+  world.enemies.push(nearest, laneNear, laneMiddle, laneFar);
+  assert.equal(world.performWarmWineSlash(), true);
+  assert.equal(world.player.x, startX);
+  assert.equal(world.player.y, startY);
+  assert.equal(world.player.actionTime, 0);
+  assert.equal(world.enemies.includes(nearest), true);
+  assert.equal(world.enemies.includes(laneNear), false);
+  assert.equal(world.enemies.includes(laneMiddle), false);
+  assert.equal(world.enemies.includes(laneFar), false);
+  assert.equal(world.slashes[0].shape, "warmwine");
+  assert.equal(world.slashes[0].range, 270);
+  assert.equal(world.slashes[0].halfWidth, 20);
+  assert.equal(world.slashes[0].cloneScale, 1);
+  assert.equal(world.slashes[0].targetCount, 3);
+  assert.ok(world.slashes[0].facingX > 0.99);
+});
+
+test("every normal enemy now carries twice its former experience value", function () {
+  var world = new World(375, 812, fixedRandom);
+  assert.deepEqual(
+    ["grunt", "runner", "brute", "archer"].map(function (type) { return world.makeEnemy(type, 0, 0).experience; }),
+    [2, 2, 6, 4]
+  );
 });
 
 test("the boss appears at the end of the fixed wave timeline", function () {
@@ -299,7 +420,7 @@ test("skill choices follow the selected hero", function () {
 test("a level gained after every available skill is maxed cannot soft-lock combat", function () {
   var world = new World(375, 812, fixedRandom);
   world.reset();
-  world.ranks = { blade: 3, whirlwind: 3, crescent: 3, might: 3, haste: 3 };
+  world.ranks = { blade: 3, bladeSweep: 3, ringblade: 3, warmWine: 3, might: 3, haste: 3 };
   world.player.health = 50;
   world.gainExperience(world.experienceNeeded);
   assert.equal(world.state, "playing");
@@ -312,7 +433,7 @@ test("a level gained after every available skill is maxed cannot soft-lock comba
 test("queued levels resume combat when the final available upgrade is selected", function () {
   var world = new World(375, 812, fixedRandom);
   world.reset();
-  world.ranks = { blade: 2, whirlwind: 3, crescent: 3, might: 3, haste: 3 };
+  world.ranks = { blade: 2, bladeSweep: 3, ringblade: 3, warmWine: 3, might: 3, haste: 3 };
   world.player.health = 50;
   world.gainExperience(world.getExperienceNeeded(1) + world.getExperienceNeeded(2));
   assert.equal(world.state, "choosing");

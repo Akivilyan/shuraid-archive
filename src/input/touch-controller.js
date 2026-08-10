@@ -2,10 +2,12 @@
 
 var math = require("../core/math");
 
-function TouchController(wxApi, onPress) {
+function TouchController(wxApi, onPress, onRelease) {
   this.wxApi = wxApi;
   this.onPress = onPress;
+  this.onRelease = onRelease || null;
   this.active = false;
+  this.contactActive = false;
   this.origin = { x: 0, y: 0 };
   this.current = { x: 0, y: 0 };
   this.maxRadius = 52;
@@ -17,21 +19,34 @@ TouchController.prototype.bind = function () {
   this.wxApi.onTouchStart(function (event) {
     var touch = event.touches[0];
     if (!touch) { return; }
+    self.contactActive = true;
+    self.origin = { x: touch.clientX, y: touch.clientY };
+    self.current = { x: touch.clientX, y: touch.clientY };
     if (self.onPress(touch.clientX, touch.clientY) === false) {
       self.active = false;
       return;
     }
     self.active = true;
-    self.origin = { x: touch.clientX, y: touch.clientY };
-    self.current = { x: touch.clientX, y: touch.clientY };
   });
   this.wxApi.onTouchMove(function (event) {
-    if (!self.active || event.touches.length === 0) { return; }
+    if (!self.contactActive || event.touches.length === 0) { return; }
     var touch = event.touches[0];
     self.current = { x: touch.clientX, y: touch.clientY };
   });
-  this.wxApi.onTouchEnd(function () { self.active = false; });
-  this.wxApi.onTouchCancel(function () { self.active = false; });
+  this.wxApi.onTouchEnd(function (event) {
+    if (!self.contactActive) { return; }
+    var touch = event.changedTouches && event.changedTouches[0];
+    var x = touch ? touch.clientX : self.current.x;
+    var y = touch ? touch.clientY : self.current.y;
+    self.active = false;
+    self.contactActive = false;
+    if (self.onRelease) { self.onRelease(x, y, false); }
+  });
+  this.wxApi.onTouchCancel(function () {
+    self.active = false;
+    self.contactActive = false;
+    if (self.onRelease) { self.onRelease(self.current.x, self.current.y, true); }
+  });
 };
 
 TouchController.prototype.getDirection = function () {

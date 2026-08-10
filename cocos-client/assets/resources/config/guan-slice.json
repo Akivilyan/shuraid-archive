@@ -1,0 +1,47 @@
+{
+  "hero": {
+    "health": 152,
+    "attack": 24,
+    "attackInterval": 0.6,
+    "attackRange": 112,
+    "speed": 124,
+    "radius": 14
+  },
+  "enemy": {
+    "type": "grunt",
+    "health": 28,
+    "speed": 54,
+    "damage": 6,
+    "experience": 2,
+    "radius": 11
+  },
+  "blade": {
+    "damageMultiplier": 1,
+    "knockback": 50,
+    "halfAngle": 0.48,
+    "visualLife": 0.34
+  },
+  "ringblade": {
+    "range": 126,
+    "damage": 42,
+    "cooldown": 10,
+    "knockback": 145,
+    "visualLife": 0.92,
+    "rotations": 2,
+    "gripPivot": 0.18
+  },
+  "warmWine": {
+    "range": 270,
+    "halfWidth": 20,
+    "damage": 32,
+    "cooldown": 8,
+    "knockback": 110,
+    "visualLife": 0.82,
+    "cloneScale": 1
+  },
+  "sliceHarness": {
+    "duration": 45,
+    "spawnInterval": 1.25,
+    "maxEnemies": 10
+  }
+}

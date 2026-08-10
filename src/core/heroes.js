@@ -10,9 +10,9 @@ var definitions = [
     health: 152,
     attack: 24,
     attackInterval: 0.6,
-    attackRange: 178,
+    attackRange: 112,
     color: "#39a957",
-    description: "大范围横扫，适合贴近敌群。"
+    description: "青龙偃月刀扇形横扫，适合贴近敌群。"
   },
   {
     id: "huang",

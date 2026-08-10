@@ -9,6 +9,11 @@ var ENEMY_HIT_SLOW_AMOUNT = 12;
 var ENEMY_HIT_SLOW_DURATION = 2;
 var ENEMY_MIN_SLOWED_SPEED = 18;
 
+function tuningAtRank(tuning, rank) {
+  if (!tuning || !tuning.ranks || tuning.ranks.length === 0) { return null; }
+  return tuning.ranks[Math.max(0, Math.min(tuning.ranks.length - 1, rank - 1))];
+}
+
 function makePlayer(mapWidth, mapHeight, hero) {
   return {
     x: mapWidth / 2,
@@ -52,7 +57,6 @@ World.prototype.resetData = function () {
   this.orbs = [];
   this.projectiles = [];
   this.enemyShots = [];
-  this.fireZones = [];
   this.slashes = [];
   this.lightningChains = [];
   this.hitEffects = [];
@@ -143,7 +147,6 @@ World.prototype.update = function (deltaSeconds, inputDirection) {
   this.updateLightningChains(dt);
   this.updateCombat(dt);
   this.updateProjectiles(dt);
-  this.updateFireZones(dt);
   this.updateOrbs(dt);
   this.updateEffects(dt);
 
@@ -226,10 +229,10 @@ World.prototype.randomSpawnPoint = function () {
 
 World.prototype.makeEnemy = function (type, x, y) {
   var definitions = {
-    grunt: { radius: 11, health: 28, speed: 54, damage: 6, experience: 1 },
-    runner: { radius: 15, health: 20, speed: 91, damage: 5, experience: 1 },
-    brute: { radius: 16, health: 82, speed: 35, damage: 10, experience: 3 },
-    archer: { radius: 11, health: 36, speed: 34, damage: 6, experience: 2 },
+    grunt: { radius: 11, health: 28, speed: 54, damage: 6, experience: 2 },
+    runner: { radius: 15, health: 20, speed: 91, damage: 5, experience: 2 },
+    brute: { radius: 16, health: 82, speed: 35, damage: 10, experience: 6 },
+    archer: { radius: 11, health: 36, speed: 34, damage: 6, experience: 4 },
     boss: { radius: 31, health: 760, speed: 31, damage: 14, experience: 0 }
   };
   var definition = definitions[type];
@@ -403,14 +406,17 @@ World.prototype.updateCombat = function (dt) {
     }
   }
 
-  if ((this.ranks.whirlwind || 0) > 0 && this.skillReady("whirlwind", dt, 3.4 - this.ranks.whirlwind * 0.3)) {
-    this.performWhirlwind();
+  var ringbladeRank = this.ranks.ringblade || 0;
+  var ringbladeTuning = skills.tuningFor("guan", "ringblade");
+  if (ringbladeRank > 0 && this.skillReady("ringblade", dt, ringbladeTuning.cooldown)) {
+    this.performRingBlade();
   }
-  if ((this.ranks.crescent || 0) > 0 && this.skillReady("crescent", dt, 2.7 - this.ranks.crescent * 0.25)) {
-    this.launchCrescent();
-  }
-  if ((this.ranks.firetrail || 0) > 0 && this.skillReady("firetrail", dt, 0.55)) {
-    this.dropFireZoneAt(this.player.x, this.player.y, this.ranks.firetrail, "fire");
+  var warmWineRank = this.ranks.warmWine || 0;
+  var warmWineTuning = skills.tuningFor("guan", "warmWine");
+  if (warmWineRank > 0 && this.skillReady("warmWine", dt, warmWineTuning.cooldown)) {
+    if (!this.performWarmWineSlash()) {
+      this.player.skillCooldowns.warmWine = 0;
+    }
   }
   if ((this.ranks.volley || 0) > 0 && this.skillReady("volley", dt, 3.0 - this.ranks.volley * 0.2)) {
     this.launchVolley();
@@ -455,7 +461,12 @@ World.prototype.performBaseAttack = function () {
     attacked = this.performBladeAttack();
   }
   if (!attacked) { return false; }
-  this.player.actionTime = this.hero.attackType === "lightning" ? 0.3 : 0.18;
+  // Guan Yu keeps a direction-neutral holding/running silhouette. The current
+  // attack frames are baked facing left, so the independent guandao sweep
+  // communicates arbitrary aim directions without a conflicting body pose.
+  if (this.heroId !== "guan") {
+    this.player.actionTime = this.hero.attackType === "lightning" ? 0.3 : 0.18;
+  }
   this.emitAudioEvent(this.hero.attackType === "projectile" ? "shot" : "attack");
   return true;
 };
@@ -491,50 +502,52 @@ World.prototype.getDamageMultiplier = function (enemy) {
 };
 
 World.prototype.performBladeAttack = function () {
-  var target = this.findNearestEnemy();
-  if (target) {
-    var direction = math.normalize(target.x - this.player.x, target.y - this.player.y);
-    this.player.facing = { x: direction.x, y: direction.y };
-  }
   var rank = this.ranks.blade || 1;
-  var range = this.hero.attackRange + (rank - 1) * 18;
-  var arcDot = rank >= 3 ? -0.86 : rank === 2 ? -0.42 : 0;
-  var hits = 0;
+  var tuning = skills.tuningFor("guan", "blade");
+  var rankTuning = tuningAtRank(tuning, rank);
+  var sweepTuning = skills.tuningFor("guan", "bladeSweep");
+  var sweepRank = this.ranks.bladeSweep || 0;
+  var range = this.hero.attackRange + sweepTuning.rangeBonuses[sweepRank];
+  var halfAngle = sweepTuning.halfAngles[sweepRank];
+  var target = null;
+  var nearestDistance = Infinity;
+  for (var targetIndex = 0; targetIndex < this.enemies.length; targetIndex += 1) {
+    var candidate = this.enemies[targetIndex];
+    var candidateDistance = math.distanceSquared(this.player, candidate);
+    var candidateRange = range + candidate.radius;
+    if (candidateDistance <= candidateRange * candidateRange && candidateDistance < nearestDistance) {
+      target = candidate;
+      nearestDistance = candidateDistance;
+    }
+  }
+  if (!target) { return false; }
+  var direction = math.normalize(target.x - this.player.x, target.y - this.player.y);
+  this.player.facing = { x: direction.x, y: direction.y };
+  var cosineLimit = Math.cos(halfAngle);
   for (var index = this.enemies.length - 1; index >= 0; index -= 1) {
     var enemy = this.enemies[index];
     var offset = math.normalize(enemy.x - this.player.x, enemy.y - this.player.y);
-    var facingDot = offset.x * this.player.facing.x + offset.y * this.player.facing.y;
-    if (offset.length <= range + enemy.radius && facingDot >= arcDot) {
-      var damage = this.hero.attack * (1 + (rank - 1) * 0.35) * this.getDamageMultiplier(enemy);
-      this.hitEnemy(enemy, damage, 50);
-      hits += 1;
+    var facingDot = offset.length === 0 ? 1 : offset.x * direction.x + offset.y * direction.y;
+    if (offset.length <= range + enemy.radius && facingDot >= cosineLimit) {
+      var damage = this.hero.attack * rankTuning.damageMultiplier * this.getDamageMultiplier(enemy);
+      this.hitEnemy(enemy, damage, rankTuning.knockback);
     }
   }
   this.slashes.push({
+    shape: "sector",
     x: this.player.x,
     y: this.player.y,
-    facingX: this.player.facing.x,
-    facingY: this.player.facing.y,
+    facingX: direction.x,
+    facingY: direction.y,
     range: range,
-    full: rank >= 3,
-    life: 0.18,
+    halfAngle: halfAngle,
+    full: false,
+    followPlayer: true,
+    rank: Math.max(rank, sweepRank),
+    life: tuning.visual.life,
+    maxLife: tuning.visual.life,
     color: "blade"
   });
-  if (rank >= 3) {
-    this.slashes.push({
-      x: this.player.x,
-      y: this.player.y,
-      facingX: -this.player.facing.x,
-      facingY: -this.player.facing.y,
-      range: range * 0.82,
-      full: true,
-      life: 0.28,
-      color: "echo"
-    });
-  }
-  if (hits >= 3) {
-    this.player.attackCooldown -= 0.12;
-  }
   return true;
 };
 
@@ -651,7 +664,7 @@ World.prototype.updateLightningChains = function (dt) {
   }
 };
 
-World.prototype.launchProjectileFan = function (count, spread, speed, damage, radius, maxHits, kind) {
+World.prototype.launchProjectileFan = function (count, spread, speed, damage, radius, maxHits, kind, details) {
   var target = this.findNearestEnemy();
   if (!target) { return; }
   var direction = math.normalize(target.x - this.player.x, target.y - this.player.y);
@@ -669,10 +682,12 @@ World.prototype.launchProjectileFan = function (count, spread, speed, damage, ra
       vy: dy * speed,
       radius: radius,
       damage: damage,
-      life: 1.35,
+      life: details && details.life ? details.life : 1.35,
+      maxLife: details && details.life ? details.life : 1.35,
       hit: [],
       maxHits: maxHits,
-      kind: kind
+      kind: kind,
+      rank: details && details.rank ? details.rank : 1
     });
   }
 };
@@ -687,24 +702,98 @@ World.prototype.damageArea = function (x, y, radius, damage, knockback, color) {
   this.slashes.push({ x: x, y: y, range: radius, full: true, life: 0.3, color: color });
 };
 
-World.prototype.performWhirlwind = function () {
-  var rank = this.ranks.whirlwind;
-  var range = 80 + rank * 16;
+World.prototype.performRingBlade = function () {
+  var rank = this.ranks.ringblade;
+  var tuning = skills.tuningFor("guan", "ringblade");
+  var rankTuning = tuningAtRank(tuning, rank);
+  var range = rankTuning.range;
   for (var index = this.enemies.length - 1; index >= 0; index -= 1) {
     var enemy = this.enemies[index];
     if (math.distanceSquared(enemy, this.player) <= (range + enemy.radius) * (range + enemy.radius)) {
-      this.hitEnemy(enemy, (12 + rank * 7) * this.getDamageMultiplier(enemy), 105);
-      if (rank >= 3 && this.enemies.indexOf(enemy) >= 0) {
-        this.hitEnemy(enemy, 11 * this.getDamageMultiplier(enemy), 70);
-      }
+      this.hitEnemy(enemy, rankTuning.damage * this.getDamageMultiplier(enemy), tuning.knockback);
     }
   }
-  this.slashes.push({ x: this.player.x, y: this.player.y, range: range, full: true, life: 0.32, color: "whirlwind" });
+  this.slashes.push({
+    shape: "ringblade",
+    x: this.player.x,
+    y: this.player.y,
+    range: range,
+    full: true,
+    followPlayer: true,
+    rank: rank,
+    rotations: tuning.visual.rotations,
+    gripPivot: tuning.visual.gripPivot,
+    life: tuning.visual.life,
+    maxLife: tuning.visual.life,
+    color: "ringblade"
+  });
 };
 
-World.prototype.launchCrescent = function () {
-  var rank = this.ranks.crescent;
-  this.launchProjectileFan(rank >= 3 ? 3 : 1, 0.28, 270, 17 + rank * 8, 9 + rank * 3, 4, "crescent");
+World.prototype.findDensestLaneDirection = function (range, halfWidth) {
+  var bestDirection = null;
+  var bestCount = 0;
+  var bestDistance = Infinity;
+  for (var candidateIndex = 0; candidateIndex < this.enemies.length; candidateIndex += 1) {
+    var candidate = this.enemies[candidateIndex];
+    if (!this.isEnemyInCombatView(candidate, 12)) { continue; }
+    var candidateOffset = math.normalize(candidate.x - this.player.x, candidate.y - this.player.y);
+    if (candidateOffset.length > range + candidate.radius) { continue; }
+    var count = 0;
+    for (var enemyIndex = 0; enemyIndex < this.enemies.length; enemyIndex += 1) {
+      var enemy = this.enemies[enemyIndex];
+      var offsetX = enemy.x - this.player.x;
+      var offsetY = enemy.y - this.player.y;
+      var forward = offsetX * candidateOffset.x + offsetY * candidateOffset.y;
+      var sideways = Math.abs(offsetX * -candidateOffset.y + offsetY * candidateOffset.x);
+      if (forward >= -enemy.radius && forward <= range + enemy.radius && sideways <= halfWidth + enemy.radius) {
+        count += 1;
+      }
+    }
+    if (count > bestCount || (count === bestCount && candidateOffset.length < bestDistance)) {
+      bestDirection = { x: candidateOffset.x, y: candidateOffset.y, count: count };
+      bestCount = count;
+      bestDistance = candidateOffset.length;
+    }
+  }
+  return bestDirection;
+};
+
+World.prototype.performWarmWineSlash = function () {
+  var rank = this.ranks.warmWine || 0;
+  if (rank <= 0) { return false; }
+  var tuning = skills.tuningFor("guan", "warmWine");
+  var rankTuning = tuningAtRank(tuning, rank);
+  var direction = this.findDensestLaneDirection(rankTuning.range, rankTuning.halfWidth);
+  if (!direction) { return false; }
+  this.player.facing = { x: direction.x, y: direction.y };
+  for (var index = this.enemies.length - 1; index >= 0; index -= 1) {
+    var enemy = this.enemies[index];
+    var offsetX = enemy.x - this.player.x;
+    var offsetY = enemy.y - this.player.y;
+    var forward = offsetX * direction.x + offsetY * direction.y;
+    var sideways = Math.abs(offsetX * -direction.y + offsetY * direction.x);
+    if (forward >= -enemy.radius && forward <= rankTuning.range + enemy.radius && sideways <= rankTuning.halfWidth + enemy.radius) {
+      this.hitEnemy(enemy, rankTuning.damage * this.getDamageMultiplier(enemy), tuning.knockback);
+    }
+  }
+  this.slashes.push({
+    shape: "warmwine",
+    x: this.player.x,
+    y: this.player.y,
+    facingX: direction.x,
+    facingY: direction.y,
+    range: rankTuning.range,
+    halfWidth: rankTuning.halfWidth,
+    cloneScale: rankTuning.cloneScale,
+    targetCount: direction.count,
+    rank: rank,
+    life: tuning.visual.life,
+    maxLife: tuning.visual.life,
+    color: "warmwine"
+  });
+  this.impactSerial += 1;
+  this.emitAudioEvent("attack");
+  return true;
 };
 
 World.prototype.launchVolley = function () {
@@ -855,52 +944,6 @@ World.prototype.updateProjectiles = function (dt) {
   }
 };
 
-World.prototype.dropFireZoneAt = function (x, y, rank, kind) {
-  this.fireZones.push({
-    x: x,
-    y: y,
-    radius: 24 + rank * 4,
-    life: 1.15 + rank * 0.55,
-    tick: 0,
-    rank: rank,
-    kind: kind || "fire"
-  });
-};
-
-World.prototype.updateFireZones = function (dt) {
-  for (var index = this.fireZones.length - 1; index >= 0; index -= 1) {
-    var zone = this.fireZones[index];
-    zone.life -= dt;
-    zone.tick -= dt;
-    if (zone.tick <= 0) {
-      for (var enemyIndex = this.enemies.length - 1; enemyIndex >= 0; enemyIndex -= 1) {
-        var enemy = this.enemies[enemyIndex];
-        if (math.distanceSquared(zone, enemy) < (zone.radius + enemy.radius) * (zone.radius + enemy.radius)) {
-          this.hitEnemy(enemy, (5 + zone.rank * 3) * this.getDamageMultiplier(enemy), 0);
-        }
-      }
-      zone.tick = 0.35;
-    }
-    if (zone.life <= 0) {
-      if (zone.rank >= 3) {
-        this.explodeFireZone(zone);
-      }
-      this.fireZones.splice(index, 1);
-    }
-  }
-};
-
-World.prototype.explodeFireZone = function (zone) {
-  var radius = zone.radius * 1.8;
-  for (var index = this.enemies.length - 1; index >= 0; index -= 1) {
-    var enemy = this.enemies[index];
-    if (math.distanceSquared(zone, enemy) < (radius + enemy.radius) * (radius + enemy.radius)) {
-      this.hitEnemy(enemy, 20 * this.getDamageMultiplier(enemy), 80);
-    }
-  }
-  this.slashes.push({ x: zone.x, y: zone.y, range: radius, full: true, life: 0.3, color: "fire" });
-};
-
 World.prototype.hitEnemy = function (enemy, damage, knockback) {
   if (this.enemies.indexOf(enemy) < 0) { return; }
   enemy.health -= damage;
@@ -1042,8 +1085,13 @@ World.prototype.chooseSkill = function (id) {
 
 World.prototype.updateEffects = function (dt) {
   for (var index = this.slashes.length - 1; index >= 0; index -= 1) {
-    this.slashes[index].life -= dt;
-    if (this.slashes[index].life <= 0) {
+    var slash = this.slashes[index];
+    if (slash.followPlayer) {
+      slash.x = this.player.x;
+      slash.y = this.player.y;
+    }
+    slash.life -= dt;
+    if (slash.life <= 0) {
       this.slashes.splice(index, 1);
     }
   }

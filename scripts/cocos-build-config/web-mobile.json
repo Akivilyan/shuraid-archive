@@ -1,0 +1,22 @@
+{
+  "taskName": "web-mobile",
+  "name": "luanshi-survivor-cocos",
+  "platform": "web-mobile",
+  "buildPath": "project://build",
+  "outputName": "web-mobile",
+  "startScene": "b13f9f32-594a-4f64-a2d8-2f13c7e6dd91",
+  "scenes": [
+    {
+      "url": "db://assets/BattleSlice.scene",
+      "uuid": "b13f9f32-594a-4f64-a2d8-2f13c7e6dd91"
+    }
+  ],
+  "debug": true,
+  "replaceSplashScreen": false,
+  "md5Cache": false,
+  "mainBundleCompressionType": "merge_dep",
+  "mainBundleIsRemote": false,
+  "packages": {
+    "web-mobile": {}
+  }
+}

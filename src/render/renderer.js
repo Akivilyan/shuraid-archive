@@ -13,6 +13,7 @@ function Renderer(context, width, height, options) {
   this.enemyAtlases = options.enemyAtlases || {};
   this.heroAtlases = options.heroAtlases || {};
   this.heroShowcases = options.heroShowcases || {};
+  this.guanWeaponImage = options.guanWeaponImage || null;
 }
 
 function roundedRect(ctx, x, y, width, height, radius) {
@@ -59,7 +60,6 @@ Renderer.prototype.render = function (world, joystick, ui) {
   var camera = world.getCamera();
   ctx.translate(-camera.x, -camera.y);
   this.drawGround(camera, world);
-  this.drawFireZones(world.fireZones);
   this.drawOrbs(world.orbs);
   this.drawProjectiles(world.projectiles, world.enemyShots);
   this.drawEnemies(world.enemies);
@@ -510,17 +510,6 @@ Renderer.prototype.drawGround = function (camera, world) {
   ctx.strokeRect(0, 0, world.mapWidth, world.mapHeight);
 };
 
-Renderer.prototype.drawFireZones = function (zones) {
-  var ctx = this.context;
-  for (var index = 0; index < zones.length; index += 1) {
-    var zone = zones[index];
-    ctx.fillStyle = "rgba(221, 83, 39, " + Math.min(0.5, zone.life * 0.32) + ")";
-    ctx.beginPath(); ctx.arc(zone.x, zone.y, zone.radius, 0, Math.PI * 2); ctx.fill();
-    ctx.strokeStyle = "rgba(255, 190, 65, 0.8)";
-    ctx.lineWidth = 2; ctx.stroke();
-  }
-};
-
 Renderer.prototype.drawOrbs = function (orbs) {
   var ctx = this.context;
   for (var index = 0; index < orbs.length; index += 1) {
@@ -745,7 +734,6 @@ Renderer.prototype.drawEnemies = function (enemies) {
 
 Renderer.prototype.getGuanFrame = function (player, pose) {
   if (pose.state === "hurt") { return 5; }
-  if (pose.state === "attack") { return pose.frame < 2 ? 3 : 4; }
   if (pose.state === "move") { return 1 + Math.floor(player.walkTime * 4) % 2; }
   return 0;
 };
@@ -775,7 +763,7 @@ Renderer.prototype.drawGuanPlayer = function (player, pose) {
     sourceWidth,
     sourceHeight,
     -bodyAnchorX,
-    baselineY - drawHeight * 374 / sourceHeight,
+    baselineY - drawHeight,
     drawWidth,
     drawHeight
   );
@@ -788,6 +776,45 @@ Renderer.prototype.getZhugeFrame = function (player, pose) {
   if (pose.state === "attack") { return pose.frame < 2 ? 3 : 4; }
   if (pose.state === "move") { return 1 + Math.floor(player.walkTime * 4) % 2; }
   return 0;
+};
+
+Renderer.prototype.getHuangFrame = function (player, pose) {
+  if (pose.state === "hurt") { return 5; }
+  if (pose.state === "attack") { return pose.frame < 2 ? 3 : 4; }
+  if (pose.state === "move") { return 1 + Math.floor(player.walkTime * 4) % 2; }
+  return 0;
+};
+
+Renderer.prototype.drawHuangPlayer = function (player, pose) {
+  var image = this.heroAtlases.huang;
+  if (!image || image.width <= 0) { return false; }
+  var ctx = this.context;
+  var sourceWidth = 384;
+  var sourceHeight = 288;
+  var frame = this.getHuangFrame(player, pose);
+  var drawHeight = 80;
+  var drawWidth = drawHeight * sourceWidth / sourceHeight;
+  var baselineY = 17;
+
+  ctx.save();
+  ctx.translate(player.x, player.y + pose.bob);
+  ctx.fillStyle = "rgba(75, 53, 31, 0.2)";
+  ctx.beginPath(); ctx.ellipse(0, 12, 22, 8, 0, 0, Math.PI * 2); ctx.fill();
+  if (player.facing.x < 0) { ctx.scale(-1, 1); }
+  ctx.globalAlpha = player.invulnerable > 0 && Math.floor(player.invulnerable * 18) % 2 === 0 ? 0.35 : 1;
+  ctx.drawImage(
+    image,
+    frame * sourceWidth,
+    0,
+    sourceWidth,
+    sourceHeight,
+    -drawWidth / 2,
+    baselineY - drawHeight,
+    drawWidth,
+    drawHeight
+  );
+  ctx.restore();
+  return true;
 };
 
 Renderer.prototype.drawZhugePlayer = function (player, pose, elapsed) {
@@ -847,6 +874,7 @@ Renderer.prototype.drawPlayer = function (player, elapsed) {
   var aimAngle = Math.atan2(player.facing.y, player.facing.x);
   var pose = rig.playerPose(player, elapsed);
   if (player.heroId === "guan" && this.drawGuanPlayer(player, pose)) { return; }
+  if (player.heroId === "huang" && this.drawHuangPlayer(player, pose)) { return; }
   if (player.heroId === "zhuge" && this.drawZhugePlayer(player, pose, elapsed)) { return; }
   ctx.save(); ctx.translate(player.x, player.y + pose.bob); ctx.rotate(pose.bodyTilt); ctx.scale(pose.bodyScaleX, pose.bodyScaleY);
   ctx.globalAlpha = player.invulnerable > 0 && Math.floor(player.invulnerable * 18) % 2 === 0 ? 0.35 : 1;
@@ -921,9 +949,10 @@ Renderer.prototype.drawSlashes = function (slashes) {
     var alpha = Math.min(0.9, slash.maxLife ? slash.life / slash.maxLife : slash.life * 4);
     var color = "239, 201, 86";
     if (slash.color === "fire") { color = "239, 91, 38"; }
-    if (slash.color === "whirlwind" || slash.color === "gust" || slash.color === "gustEcho") { color = "83, 197, 184"; }
+    if (slash.color === "gust" || slash.color === "gustEcho") { color = "83, 197, 184"; }
     if (slash.color === "spell" || slash.color === "spellEcho") { color = "105, 139, 224"; }
     if (slash.color === "thunder") { color = "255, 221, 55"; }
+    if (slash.color === "blade") { color = "54, 168, 101"; }
     if (slash.color === "vermillion") { color = "244, 86, 42"; }
     if (slash.color === "trigram") { color = "82, 202, 190"; }
     if (slash.color === "arrowrain" || slash.color === "arrowrainEcho") { color = "225, 145, 45"; }
@@ -973,6 +1002,94 @@ Renderer.prototype.drawSlashes = function (slashes) {
         ctx.lineTo(slash.toX + Math.cos(sparkAngle) * outer, slash.toY + Math.sin(sparkAngle) * outer);
         ctx.stroke();
       }
+      ctx.restore();
+      continue;
+    }
+    if (slash.shape === "warmwine") {
+      var chargeProgress = 1 - Math.max(0, slash.life / slash.maxLife);
+      var chargeTravel = Math.min(1, chargeProgress / 0.86);
+      var chargeEase = chargeTravel * chargeTravel * (3 - chargeTravel * 2);
+      var chargeFade = chargeProgress < 0.08 ? chargeProgress / 0.08 : chargeProgress > 0.88 ? (1 - chargeProgress) / 0.12 : 1;
+      var cloneX = slash.x + slash.facingX * slash.range * chargeEase;
+      var cloneY = slash.y + slash.facingY * slash.range * chargeEase;
+      var chargeNormalX = -slash.facingY;
+      var chargeNormalY = slash.facingX;
+
+      ctx.save();
+      ctx.globalAlpha = Math.max(0, chargeFade) * 0.15;
+      ctx.strokeStyle = "rgba(55, 150, 91, 0.9)";
+      ctx.lineWidth = Math.max(12, slash.halfWidth * 1.45);
+      ctx.lineCap = "round";
+      ctx.beginPath(); ctx.moveTo(slash.x, slash.y); ctx.lineTo(cloneX, cloneY); ctx.stroke();
+      ctx.globalAlpha = Math.max(0, chargeFade) * 0.52;
+      ctx.strokeStyle = "rgba(255, 205, 86, 0.88)";
+      ctx.lineWidth = 2.5;
+      ctx.beginPath(); ctx.moveTo(slash.x, slash.y); ctx.lineTo(cloneX, cloneY); ctx.stroke();
+
+      for (var windLine = 0; windLine < 4; windLine += 1) {
+        var windOffset = (windLine - 1.5) * Math.max(7, slash.halfWidth * 0.35);
+        var windStart = 0.08 + windLine * 0.045;
+        var windEnd = Math.max(windStart + 0.08, chargeEase - windLine * 0.025);
+        ctx.globalAlpha = Math.max(0, chargeFade) * (windLine % 2 === 0 ? 0.52 : 0.34);
+        ctx.strokeStyle = windLine % 2 === 0 ? "rgba(245, 255, 232, 0.92)" : "rgba(119, 225, 180, 0.88)";
+        ctx.lineWidth = windLine % 2 === 0 ? 1.8 : 1.2;
+        ctx.beginPath();
+        ctx.moveTo(
+          slash.x + slash.facingX * slash.range * windStart + chargeNormalX * windOffset,
+          slash.y + slash.facingY * slash.range * windStart + chargeNormalY * windOffset
+        );
+        ctx.quadraticCurveTo(
+          slash.x + slash.facingX * slash.range * ((windStart + windEnd) * 0.5) - chargeNormalX * windOffset * 0.35,
+          slash.y + slash.facingY * slash.range * ((windStart + windEnd) * 0.5) - chargeNormalY * windOffset * 0.35,
+          slash.x + slash.facingX * slash.range * windEnd + chargeNormalX * windOffset * 0.25,
+          slash.y + slash.facingY * slash.range * windEnd + chargeNormalY * windOffset * 0.25
+        );
+        ctx.stroke();
+      }
+
+      var guanAtlas = this.heroAtlases.guan;
+      var cloneSourceWidth = 384;
+      var cloneSourceHeight = 288;
+      var cloneFrame = 1 + Math.floor(chargeProgress * 10) % 2;
+      var cloneHeight = 76 * (slash.cloneScale || 1);
+      var cloneWidth = cloneHeight * cloneSourceWidth / cloneSourceHeight;
+      var cloneAnchorX = cloneWidth * 230 / cloneSourceWidth;
+      var drawChargeClone = function (positionX, positionY, opacity) {
+        ctx.save();
+        ctx.translate(positionX, positionY);
+        if (slash.facingX < 0) { ctx.scale(-1, 1); }
+        ctx.globalAlpha = Math.max(0, chargeFade) * opacity;
+        if (guanAtlas && guanAtlas.width > 0) {
+          ctx.drawImage(
+            guanAtlas,
+            cloneFrame * cloneSourceWidth,
+            0,
+            cloneSourceWidth,
+            cloneSourceHeight,
+            -cloneAnchorX,
+            17 - cloneHeight,
+            cloneWidth,
+            cloneHeight
+          );
+        } else {
+          ctx.fillStyle = "rgba(46, 145, 74, 0.86)";
+          ctx.strokeStyle = "rgba(255, 220, 115, 0.9)";
+          ctx.lineWidth = 3;
+          var fallbackScale = slash.cloneScale || 1;
+          ctx.beginPath(); ctx.ellipse(0, -18 * fallbackScale, 19 * fallbackScale, 28 * fallbackScale, 0, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
+        }
+        ctx.restore();
+      };
+      for (var chargeEcho = 2; chargeEcho >= 1; chargeEcho -= 1) {
+        var echoTravel = Math.max(0, chargeTravel - chargeEcho * 0.1);
+        var echoEase = echoTravel * echoTravel * (3 - echoTravel * 2);
+        drawChargeClone(
+          slash.x + slash.facingX * slash.range * echoEase,
+          slash.y + slash.facingY * slash.range * echoEase,
+          chargeEcho === 1 ? 0.18 : 0.09
+        );
+      }
+      drawChargeClone(cloneX, cloneY, 0.62);
       ctx.restore();
       continue;
     }
@@ -1078,28 +1195,121 @@ Renderer.prototype.drawSlashes = function (slashes) {
       ctx.restore();
       continue;
     }
-    if (slash.shape === "sector") {
-      ctx.globalAlpha = alpha;
-      ctx.fillStyle = "rgba(" + color + ",0.34)";
-      ctx.strokeStyle = "rgba(255, 205, 74,0.95)";
-      ctx.lineWidth = 6;
-      ctx.beginPath();
-      ctx.moveTo(0, 0);
-      ctx.arc(0, 0, slash.range, -slash.halfAngle, slash.halfAngle);
-      ctx.closePath();
-      ctx.fill(); ctx.stroke();
-      ctx.strokeStyle = "rgba(255, 244, 174,0.85)";
+    if (slash.shape === "ringblade") {
+      var spinProgress = 1 - Math.max(0, slash.life / slash.maxLife);
+      var spinFade = spinProgress < 0.06 ? spinProgress / 0.06 : spinProgress > 0.88 ? Math.max(0, (1 - spinProgress) / 0.12) : 1;
+      var spinEase = 1 - Math.pow(1 - Math.min(1, spinProgress * 1.8), 2);
+      var spinAngle = spinProgress * Math.PI * 2 * (slash.rotations || 2);
+      var ringWeaponLength = slash.range / 0.82;
+      var ringWeaponRatio = this.guanWeaponImage && this.guanWeaponImage.width > 0 ? this.guanWeaponImage.height / this.guanWeaponImage.width : 162 / 1024;
+      var ringWeaponHeight = ringWeaponLength * ringWeaponRatio * 1.35;
+      var ringWeaponX = -ringWeaponLength * (slash.gripPivot || 0.18);
+      var ringWeaponY = -ringWeaponHeight / 2;
+      ctx.globalCompositeOperation = "source-over";
+      ctx.lineCap = "round";
+      ctx.globalAlpha = spinFade * 0.42;
+      ctx.strokeStyle = "rgba(57, 181, 108, 0.92)";
+      ctx.lineWidth = 9;
+      ctx.beginPath(); ctx.arc(0, 0, slash.range * 0.82 * spinEase, spinAngle - Math.PI * 0.86, spinAngle); ctx.stroke();
+      ctx.globalAlpha = spinFade * 0.72;
+      ctx.strokeStyle = "rgba(255, 214, 94, 0.94)";
       ctx.lineWidth = 3;
-      ctx.beginPath(); ctx.arc(0, 0, slash.range * 0.7, -slash.halfAngle * 0.88, slash.halfAngle * 0.88); ctx.stroke();
-      for (var flame = -2; flame <= 2; flame += 1) {
-        var flameAngle = flame * slash.halfAngle * 0.36;
-        ctx.save(); ctx.rotate(flameAngle);
-        ctx.strokeStyle = flame % 2 === 0 ? "rgba(255,244,155,0.9)" : "rgba(255,130,42,0.9)";
-        ctx.lineWidth = flame === 0 ? 7 : 4;
+      ctx.beginPath(); ctx.arc(0, 0, slash.range * 0.84 * spinEase, spinAngle - Math.PI * 0.62, spinAngle); ctx.stroke();
+      for (var shellLine = 0; shellLine < 4; shellLine += 1) {
+        var shellEnd = spinAngle - shellLine * 0.055;
+        var shellStart = shellEnd - Math.PI * (0.34 + shellLine * 0.045);
+        ctx.globalAlpha = spinFade * (0.58 - shellLine * 0.08);
+        ctx.strokeStyle = "rgba(250, 255, 244, 0.96)";
+        ctx.lineWidth = shellLine === 0 ? 1.8 : 1.25;
         ctx.beginPath();
-        ctx.moveTo(slash.range * 0.18, 0);
-        ctx.quadraticCurveTo(slash.range * 0.56, flame * 3, slash.range * (0.86 - Math.abs(flame) * 0.05), 0);
-        ctx.stroke(); ctx.restore();
+        ctx.arc(0, 0, slash.range * (0.62 + shellLine * 0.07) * spinEase, shellStart, shellEnd);
+        ctx.stroke();
+      }
+
+      if (this.guanWeaponImage && this.guanWeaponImage.width > 0) {
+        for (var weaponEcho = 2; weaponEcho >= 0; weaponEcho -= 1) {
+          ctx.save();
+          ctx.rotate(spinAngle - weaponEcho * 0.18);
+          ctx.globalAlpha = spinFade * (weaponEcho === 0 ? 0.96 : weaponEcho === 1 ? 0.22 : 0.1);
+          ctx.drawImage(this.guanWeaponImage, ringWeaponX, ringWeaponY, ringWeaponLength, ringWeaponHeight);
+          ctx.restore();
+        }
+      } else {
+        ctx.save();
+        ctx.rotate(spinAngle);
+        ctx.globalAlpha = spinFade;
+        ctx.strokeStyle = "#2e7048";
+        ctx.lineWidth = 8;
+        ctx.beginPath(); ctx.moveTo(ringWeaponX, 0); ctx.lineTo(slash.range * 0.76, 0); ctx.stroke();
+        ctx.fillStyle = "#e7ead8";
+        ctx.strokeStyle = "#254c36";
+        ctx.lineWidth = 3;
+        ctx.beginPath(); ctx.moveTo(slash.range * 0.68, -8); ctx.lineTo(slash.range, -2); ctx.lineTo(slash.range * 0.72, 13); ctx.closePath(); ctx.fill(); ctx.stroke();
+        ctx.restore();
+      }
+      ctx.restore();
+      continue;
+    }
+    if (slash.shape === "sector") {
+      var sectorProgress = 1 - Math.max(0, slash.life / slash.maxLife);
+      var sectorTravel = Math.min(1, sectorProgress / 0.78);
+      var sectorEase = sectorTravel * sectorTravel * (3 - sectorTravel * 2);
+      var sectorFade = sectorProgress < 0.08 ? sectorProgress / 0.08 : sectorProgress > 0.84 ? (1 - sectorProgress) / 0.16 : 1;
+      var sectorStartAngle = -slash.halfAngle;
+      var sectorCurrentAngle = sectorStartAngle + slash.halfAngle * 2 * sectorEase;
+      var sectorWeaponLength = slash.range / 0.82;
+      var sectorWeaponRatio = this.guanWeaponImage && this.guanWeaponImage.width > 0 ? this.guanWeaponImage.height / this.guanWeaponImage.width : 162 / 1024;
+      var sectorWeaponHeight = sectorWeaponLength * sectorWeaponRatio * 1.25;
+      var sectorWeaponX = -sectorWeaponLength * 0.18;
+      var sectorWeaponY = -sectorWeaponHeight / 2;
+      ctx.globalCompositeOperation = "source-over";
+      ctx.lineCap = "round";
+
+      ctx.globalAlpha = Math.max(0, sectorFade) * 0.42;
+      ctx.strokeStyle = "rgba(54, 168, 101, 0.92)";
+      ctx.lineWidth = 8;
+      ctx.beginPath(); ctx.arc(0, 0, slash.range * 0.82, sectorStartAngle, sectorCurrentAngle); ctx.stroke();
+      ctx.globalAlpha = Math.max(0, sectorFade) * 0.78;
+      ctx.strokeStyle = "rgba(255, 211, 92, 0.96)";
+      ctx.lineWidth = 3;
+      ctx.beginPath(); ctx.arc(0, 0, slash.range * 0.84, sectorStartAngle, sectorCurrentAngle); ctx.stroke();
+      for (var sectorShell = 0; sectorShell < 3; sectorShell += 1) {
+        var sectorShellStart = sectorStartAngle + sectorShell * 0.025;
+        var sectorShellEnd = sectorCurrentAngle - sectorShell * 0.018;
+        if (sectorShellEnd <= sectorShellStart) { continue; }
+        ctx.globalAlpha = Math.max(0, sectorFade) * (0.54 - sectorShell * 0.1);
+        ctx.strokeStyle = "rgba(248, 255, 238, 0.94)";
+        ctx.lineWidth = 1.4;
+        ctx.beginPath();
+        ctx.arc(
+          0,
+          0,
+          slash.range * (0.65 + sectorShell * 0.07),
+          sectorShellStart,
+          sectorShellEnd
+        );
+        ctx.stroke();
+      }
+
+      for (var sectorEcho = 2; sectorEcho >= 0; sectorEcho -= 1) {
+        var sectorEchoTravel = Math.max(0, sectorTravel - sectorEcho * 0.12);
+        var sectorEchoEase = sectorEchoTravel * sectorEchoTravel * (3 - sectorEchoTravel * 2);
+        var sectorWeaponAngle = sectorStartAngle + slash.halfAngle * 2 * sectorEchoEase;
+        ctx.save();
+        ctx.rotate(sectorWeaponAngle);
+        ctx.globalAlpha = Math.max(0, sectorFade) * (sectorEcho === 0 ? 0.96 : sectorEcho === 1 ? 0.2 : 0.08);
+        if (this.guanWeaponImage && this.guanWeaponImage.width > 0) {
+          ctx.drawImage(this.guanWeaponImage, sectorWeaponX, sectorWeaponY, sectorWeaponLength, sectorWeaponHeight);
+        } else {
+          ctx.strokeStyle = "#2e7048";
+          ctx.lineWidth = 7;
+          ctx.beginPath(); ctx.moveTo(sectorWeaponX, 0); ctx.lineTo(slash.range * 0.75, 0); ctx.stroke();
+          ctx.fillStyle = "#e7ead8";
+          ctx.strokeStyle = "#254c36";
+          ctx.lineWidth = 3;
+          ctx.beginPath(); ctx.moveTo(slash.range * 0.67, -7); ctx.lineTo(slash.range, -2); ctx.lineTo(slash.range * 0.72, 12); ctx.closePath(); ctx.fill(); ctx.stroke();
+        }
+        ctx.restore();
       }
       ctx.restore();
       continue;

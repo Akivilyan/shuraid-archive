@@ -1,6 +1,13 @@
 project.private.config.json
 node_modules/
 coverage/
+.playwright-cli/
+output/
+cocos-client/build/
+cocos-client/build-logs/
+cocos-client/library/
+cocos-client/local/
+cocos-client/temp/
 *.log
 Thumbs.db
 .DS_Store

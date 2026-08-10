@@ -1,6 +1,7 @@
 "use strict";
 
 require("./skills.test");
+require("./input.test");
 require("./heroes.test");
 require("./world.test");
 require("./assets.test");

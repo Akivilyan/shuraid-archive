@@ -1,0 +1,27 @@
+{
+  "taskName": "wechatgame",
+  "name": "luanshi-survivor-cocos",
+  "platform": "wechatgame",
+  "buildPath": "project://build",
+  "outputName": "wechatgame",
+  "startScene": "b13f9f32-594a-4f64-a2d8-2f13c7e6dd91",
+  "scenes": [
+    {
+      "url": "db://assets/BattleSlice.scene",
+      "uuid": "b13f9f32-594a-4f64-a2d8-2f13c7e6dd91"
+    }
+  ],
+  "debug": false,
+  "replaceSplashScreen": false,
+  "md5Cache": false,
+  "mainBundleCompressionType": "merge_all_json",
+  "mainBundleIsRemote": false,
+  "packages": {
+    "wechatgame": {
+      "appid": "wxc99662ee0bfded03",
+      "orientation": "portrait",
+      "separateEngine": false,
+      "highPerformanceMode": true
+    }
+  }
+}

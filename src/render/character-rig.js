@@ -18,7 +18,7 @@ function playerPose(player, elapsed) {
   if ((player.hurtTime || 0) > 0) {
     state = "hurt";
     frame = 0;
-  } else if (player.actionTime > 0) {
+  } else if (player.actionTime > 0 && player.heroId !== "guan") {
     state = "attack";
     var actionDuration = player.heroId === "zhuge" ? 0.32 : 0.18;
     frame = frameIndex(1 - clamp01(player.actionTime / actionDuration), 4);
@@ -52,11 +52,7 @@ function playerPose(player, elapsed) {
     weapon: action
   };
   if (player.heroId === "guan") {
-    if (state === "attack") {
-      pose.frontArm = [-0.35, -0.65, -0.15, 0.08][frame];
-      pose.rearArm = [0.18, -0.18, -0.45, -0.08][frame];
-    }
-    pose.weaponAngle = state === "attack" ? [-0.85, -0.45, 0.72, 0.18][frame] : -0.12;
+    pose.weaponAngle = -0.12;
   } else if (player.heroId === "huang") {
     if (state === "attack") {
       pose.frontArm = [-0.15, -0.3, -0.38, -0.08][frame];

@@ -2,6 +2,7 @@
 
 var World = require("../core/world");
 var TouchController = require("../input/touch-controller");
+var ChoiceInputGuard = require("../input/choice-input-guard");
 var Renderer = require("../render/renderer");
 var AudioManager = require("../audio/audio-manager");
 
@@ -43,8 +44,12 @@ function WeChatGame() {
   this.potLidGuardImage = loadImage("assets/runtime/pot-lid-guard-atlas.png");
   this.bunThrowerImage = loadImage("assets/runtime/bun-thrower-atlas.png");
   this.guanImage = loadImage("assets/runtime/guan-atlas.png");
+  this.guanWeaponImage = loadImage("assets/runtime/guan-yanyuedao-v1.png");
+  this.huangImage = loadImage("assets/runtime/huang-atlas.png");
   this.zhugeImage = loadImage("assets/runtime/zhuge-atlas.png");
+  this.guanShowcaseImage = loadImage("assets/runtime/guan-showcase-v1.jpg");
   this.huangShowcaseImage = loadImage("assets/runtime/huang-showcase-v1.jpg");
+  this.zhugeShowcaseImage = loadImage("assets/runtime/zhuge-showcase-v1.jpg");
   this.renderer = new Renderer(this.context, this.width, this.height, {
     safeTop: this.safeTop,
     safeBottom: this.safeBottom,
@@ -55,14 +60,21 @@ function WeChatGame() {
       potLidGuard: this.potLidGuardImage,
       bunThrower: this.bunThrowerImage
     },
-    heroAtlases: { guan: this.guanImage, zhuge: this.zhugeImage },
-    heroShowcases: { huang: this.huangShowcaseImage }
+    heroAtlases: { guan: this.guanImage, huang: this.huangImage, zhuge: this.zhugeImage },
+    guanWeaponImage: this.guanWeaponImage,
+    heroShowcases: {
+      guan: this.guanShowcaseImage,
+      huang: this.huangShowcaseImage,
+      zhuge: this.zhugeShowcaseImage
+    }
   });
   this.screen = "home";
   this.previousScreen = "home";
   this.settings = { vibration: true, music: true, sound: true };
   this.audio = new AudioManager(wx);
   this.lowHealthDanger = false;
+  this.choiceInput = new ChoiceInputGuard(240);
+  this.lastWorldState = this.world.state;
   this.homeImage = loadImage("assets/ui/home-cartoon-v1.jpg");
 
   var self = this;
@@ -111,9 +123,7 @@ function WeChatGame() {
     }
     if (self.world.state === "choosing") {
       var offerIndex = self.renderer.getOfferIndexAt(x, y, self.world.offers.length);
-      if (offerIndex >= 0) {
-        self.world.chooseSkill(self.world.offers[offerIndex].id);
-      }
+      self.choiceInput.press(offerIndex, Date.now());
       return false;
     }
     if (self.world.state === "won" || self.world.state === "lost") {
@@ -121,6 +131,22 @@ function WeChatGame() {
       return false;
     }
     return true;
+  }, function (x, y, cancelled) {
+    if (cancelled) {
+      self.choiceInput.cancel();
+      return;
+    }
+    if (self.world.state !== "choosing") {
+      self.choiceInput.cancel();
+      return;
+    }
+    var offerIndex = self.renderer.getOfferIndexAt(x, y, self.world.offers.length);
+    if (!self.choiceInput.release(offerIndex)) { return; }
+    var selected = self.world.offers[offerIndex];
+    if (!selected || !self.world.chooseSkill(selected.id)) { return; }
+    if (self.world.state === "choosing") {
+      self.choiceInput.open(Date.now());
+    }
   });
   this.lastTime = 0;
   this.lastImpactSerial = 0;
@@ -136,6 +162,14 @@ WeChatGame.prototype.start = function () {
     self.lastTime = timestamp;
     if (self.screen === "battle") {
       self.world.update(dt, self.input.getDirection());
+    }
+    if (self.world.state !== self.lastWorldState) {
+      if (self.world.state === "choosing") {
+        self.choiceInput.open(Date.now());
+      } else {
+        self.choiceInput.cancel();
+      }
+      self.lastWorldState = self.world.state;
     }
     var musicMode = "calm";
     if (self.screen === "battle") {

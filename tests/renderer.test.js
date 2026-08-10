@@ -117,21 +117,29 @@ test("selected hero card uses an action frame and explicit selected label", func
   assert.ok(sourceFrames.some(function (sourceX) { return sourceX >= 384 * 3; }));
 });
 
-test("Huang Zhong uses the dedicated showcase instead of enlarging the battle skeleton", function () {
+test("each hero uses a dedicated showcase instead of enlarging the battle skeleton", function () {
   var context = makeContext();
   var showcaseDraws = 0;
-  var showcase = { width: 720, height: 1080 };
+  var showcases = {
+    guan: { width: 720, height: 1080 },
+    huang: { width: 720, height: 1080 },
+    zhuge: { width: 720, height: 1080 }
+  };
   context.drawImage = function (image) {
-    if (image === showcase) { showcaseDraws += 1; }
+    if (image === showcases.guan || image === showcases.huang || image === showcases.zhuge) {
+      showcaseDraws += 1;
+    }
   };
   var renderer = new Renderer(context, 375, 812, {
     safeTop: 44,
     safeBottom: 20,
     playTop: 110,
-    heroShowcases: { huang: showcase }
+    heroShowcases: showcases
   });
-  renderer.drawHomeScreen(makeHomeWorld("huang"), 1.2);
-  assert.equal(showcaseDraws, 1);
+  ["guan", "huang", "zhuge"].forEach(function (heroId) {
+    renderer.drawHomeScreen(makeHomeWorld(heroId), 1.2);
+  });
+  assert.equal(showcaseDraws, 3);
 });
 
 test("hero selection renders its own full-page artwork without the old camp background", function () {
@@ -234,7 +242,13 @@ test("the pushed stove atlas replaces the runner drawing when loaded", function 
 test("the Guan Yu atlas renders the default hero when loaded", function () {
   var context = makeContext();
   var drawCalls = 0;
-  context.drawImage = function () { drawCalls += 1; };
+  var destinationY = 0;
+  var destinationHeight = 0;
+  context.drawImage = function () {
+    drawCalls += 1;
+    destinationY = arguments[6];
+    destinationHeight = arguments[8];
+  };
   var renderer = new Renderer(context, 375, 812, {
     safeTop: 44,
     playTop: 110,
@@ -252,6 +266,7 @@ test("the Guan Yu atlas renders the default hero when loaded", function () {
     invulnerable: 0
   }, 1.2);
   assert.equal(drawCalls, 1);
+  assert.equal(destinationY + destinationHeight, 17);
 });
 
 test("the Zhuge Liang atlas replaces the fallback drawing when loaded", function () {
@@ -270,11 +285,126 @@ test("the Zhuge Liang atlas replaces the fallback drawing when loaded", function
   assert.equal(drawImageCalls, 1);
 });
 
+test("the Huang Zhong atlas replaces the fallback drawing when loaded", function () {
+  var drawImageCalls = 0;
+  var destinationY = 0;
+  var destinationHeight = 0;
+  var context = makeContext();
+  context.drawImage = function () {
+    drawImageCalls += 1;
+    destinationY = arguments[6];
+    destinationHeight = arguments[8];
+  };
+  var renderer = new Renderer(context, 375, 812, {
+    safeTop: 44,
+    playTop: 110,
+    heroAtlases: { huang: { width: 2304, height: 288 } }
+  });
+  renderer.drawPlayer({
+    heroId: "huang", x: 100, y: 120, facing: { x: 1, y: 0 },
+    moving: false, walkTime: 0, actionTime: 0, hurtTime: 0, invulnerable: 0
+  }, 0);
+  assert.equal(drawImageCalls, 1);
+  assert.equal(destinationY + destinationHeight, 17);
+});
+
 test("the Eight Trigram Formation renders with the lightweight Canvas path", function () {
   var renderer = new Renderer(makeContext(), 375, 812, { safeTop: 44, playTop: 110 });
   assert.doesNotThrow(function () {
     renderer.drawSlashes([{ shape: "trigram", color: "trigram", x: 120, y: 180, range: 60, life: 0.5, maxLife: 0.68 }]);
   });
+});
+
+test("Green Dragon Slash unfolds as a short horizontal weapon sweep without a filled fan", function () {
+  var context = makeContext();
+  var weapon = { width: 1024, height: 162 };
+  var weaponDraws = [];
+  var arcCalls = 0;
+  var fillCalls = 0;
+  context.arc = function () { arcCalls += 1; };
+  context.fill = function () { fillCalls += 1; };
+  context.drawImage = function (image, x, y, width, height) {
+    if (image === weapon) { weaponDraws.push({ x: x, y: y, width: width, height: height }); }
+  };
+  var renderer = new Renderer(context, 375, 812, {
+    safeTop: 44,
+    playTop: 110,
+    guanWeaponImage: weapon
+  });
+  renderer.drawSlashes([
+    { shape: "sector", color: "blade", x: 120, y: 180, facingX: 1, facingY: 0, range: 130, halfAngle: 0.66, rank: 3, full: false, life: 0.18, maxLife: 0.34 }
+  ]);
+  assert.equal(weaponDraws.length, 3);
+  assert.ok(arcCalls >= 5);
+  assert.equal(fillCalls, 0);
+  assert.ok(weaponDraws[2].width < weapon.width);
+  assert.ok(weaponDraws[2].height < weapon.height);
+});
+
+test("Green Dragon Ring Slash rotates the complete high-resolution guandao around Guan Yu", function () {
+  var context = makeContext();
+  var weapon = { width: 1024, height: 162 };
+  var weaponDraws = [];
+  var arcCalls = 0;
+  var rotateCalls = [];
+  context.arc = function () { arcCalls += 1; };
+  context.rotate = function (angle) { rotateCalls.push(angle); };
+  context.drawImage = function (image, x, y, width, height) {
+    if (image === weapon) { weaponDraws.push({ x: x, y: y, width: width, height: height }); }
+  };
+  var renderer = new Renderer(context, 375, 812, {
+    safeTop: 44,
+    playTop: 110,
+    guanWeaponImage: weapon
+  });
+  assert.doesNotThrow(function () {
+    renderer.drawSlashes([
+      { shape: "ringblade", color: "ringblade", x: 120, y: 180, range: 174, rank: 3, full: true, rotations: 2, gripPivot: 0.18, life: 0.46, maxLife: 0.92 }
+    ]);
+  });
+  assert.equal(weaponDraws.length, 3);
+  var weaponDraw = weaponDraws[weaponDraws.length - 1];
+  var expectedLength = 174 / 0.82;
+  var expectedHeight = expectedLength * 162 / 1024 * 1.35;
+  assert.ok(Math.abs(weaponDraw.x + expectedLength * 0.18) < 0.000001);
+  assert.ok(Math.abs(weaponDraw.width - expectedLength) < 0.000001);
+  assert.ok(Math.abs(weaponDraw.height - expectedHeight) < 0.000001);
+  assert.ok(Math.abs(weaponDraw.y + expectedHeight / 2) < 0.000001);
+  assert.ok(weaponDraw.width < weapon.width);
+  assert.ok(weaponDraw.height < weapon.height);
+  assert.ok(arcCalls >= 6);
+  assert.ok(Math.abs(rotateCalls[rotateCalls.length - 1] - Math.PI * 2) < 0.000001);
+});
+
+test("Warm Wine Slash enlarges its translucent clone while keeping fixed echoes and wind lines", function () {
+  var context = makeContext();
+  var atlas = { width: 2304, height: 288 };
+  var cloneDraws = [];
+  var windCurves = 0;
+  context.quadraticCurveTo = function () { windCurves += 1; };
+  context.drawImage = function (image) {
+    if (image === atlas) {
+      cloneDraws.push({
+        alpha: context.globalAlpha,
+        destinationY: arguments[6],
+        destinationHeight: arguments[8]
+      });
+    }
+  };
+  var renderer = new Renderer(context, 375, 812, {
+    safeTop: 44,
+    playTop: 110,
+    heroAtlases: { guan: atlas }
+  });
+  renderer.drawSlashes([
+    { shape: "warmwine", color: "warmwine", x: 120, y: 180, facingX: 1, facingY: 0, range: 360, halfWidth: 32, cloneScale: 1.28, rank: 3, life: 0.41, maxLife: 0.82 }
+  ]);
+  assert.equal(cloneDraws.length, 3);
+  assert.equal(windCurves, 4);
+  var mainClone = cloneDraws[cloneDraws.length - 1];
+  assert.ok(mainClone.alpha > 0 && mainClone.alpha < 1);
+  assert.equal(mainClone.destinationY + mainClone.destinationHeight, 17);
+  assert.ok(Math.abs(mainClone.destinationHeight - 76 * 1.28) < 0.000001);
 });
 
 test("the three kitchen atlases replace grunt brute and archer drawings", function () {

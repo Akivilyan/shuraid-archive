@@ -93,14 +93,13 @@ export class BattlePresenter {
   private readonly slashInner: Graphics;
   private readonly slashOpacity: UIOpacity;
   private readonly position = new Vec3();
-  private readonly slashStartScale = new Vec3(0.72, 0.72, 1);
-  private readonly slashEndScale = new Vec3(1.08, 1.08, 1);
+  private readonly slashStartScale = new Vec3(0.88, 0.88, 1);
+  private readonly slashEndScale = new Vec3(1, 1, 1);
   private readonly slashOuterColor = new Color(62, 226, 174, 185);
   private readonly slashInnerColor = new Color(255, 239, 166, 235);
 
   private lastAttackSerial = 0;
   private attackTime = 0;
-  private attackFacingSign = 1;
   private visualFacingSign = 1;
   private currentPlayerAnimation = '';
 
@@ -202,17 +201,15 @@ export class BattlePresenter {
       0,
     );
     this.playerNode.setPosition(this.position);
+    this.visualFacingSign = resolveFacingSign(player.facingX, this.visualFacingSign);
+    this.playerVisualNode.setScale(this.visualFacingSign, 1, 1);
 
     if (this.attackTime > 0) {
-      this.visualFacingSign = this.attackFacingSign;
-      this.playerVisualNode.setScale(this.visualFacingSign, 1, 1);
       this.playPlayerAnimation(PLAYER_ATTACK_ANIMATION);
       this.attackTime = Math.max(0, this.attackTime - frameDeltaSeconds);
       return;
     }
 
-    this.visualFacingSign = resolveFacingSign(player.facingX, this.visualFacingSign);
-    this.playerVisualNode.setScale(this.visualFacingSign, 1, 1);
     this.playPlayerAnimation(
       player.moving ? PLAYER_MOVE_ANIMATION : PLAYER_IDLE_ANIMATION,
     );
@@ -248,7 +245,6 @@ export class BattlePresenter {
 
   private beginAttack(attack: AttackSnapshot): void {
     this.attackTime = GREEN_DRAGON_VISUAL_SECONDS;
-    this.attackFacingSign = resolveFacingSign(attack.facingX, this.visualFacingSign);
     this.playPlayerAnimation(PLAYER_ATTACK_ANIMATION);
 
     Tween.stopAllByTarget(this.slashNode);
@@ -274,18 +270,28 @@ export class BattlePresenter {
   }
 
   private drawSlashEffect(range: number, halfAngle: number): void {
-    const radius = Math.max(12, range - 7);
+    const radius = Math.max(12, range);
+    const startX = Math.cos(halfAngle) * radius;
+    const startY = -Math.sin(halfAngle) * radius;
     this.slashOuter.clear();
-    this.slashOuter.lineWidth = 14;
-    this.slashOuter.strokeColor = this.slashOuterColor;
+    this.slashOuter.fillColor = this.slashOuterColor;
+    this.slashOuter.moveTo(startX, startY);
     this.slashOuter.arc(0, 0, radius, -halfAngle, halfAngle, false);
-    this.slashOuter.stroke();
+    this.slashOuter.quadraticCurveTo(radius * 0.42, 0, startX, startY);
+    this.slashOuter.close();
+    this.slashOuter.fill();
 
+    const innerRadius = Math.max(8, radius - 10);
+    const innerHalfAngle = halfAngle * 0.8;
+    const innerStartX = Math.cos(innerHalfAngle) * innerRadius;
+    const innerStartY = -Math.sin(innerHalfAngle) * innerRadius;
     this.slashInner.clear();
-    this.slashInner.lineWidth = 4;
-    this.slashInner.strokeColor = this.slashInnerColor;
-    this.slashInner.arc(0, 0, radius, -halfAngle, halfAngle, false);
-    this.slashInner.stroke();
+    this.slashInner.fillColor = this.slashInnerColor;
+    this.slashInner.moveTo(innerStartX, innerStartY);
+    this.slashInner.arc(0, 0, innerRadius, -innerHalfAngle, innerHalfAngle, false);
+    this.slashInner.quadraticCurveTo(innerRadius * 0.56, 0, innerStartX, innerStartY);
+    this.slashInner.close();
+    this.slashInner.fill();
   }
 
   private playPlayerAnimation(name: string): void {

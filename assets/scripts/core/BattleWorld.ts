@@ -267,33 +267,9 @@ export class BattleWorld {
       return;
     }
 
-    let target: MutableEnemy | null = null;
-    let nearestDistanceSquared = Number.POSITIVE_INFINITY;
-    for (let index = 0; index < this.enemies.length; index += 1) {
-      const enemy = this.enemies[index];
-      if (!enemy.active) {
-        continue;
-      }
-      const offsetX = enemy.x - this.player.x;
-      const offsetY = enemy.y - this.player.y;
-      const distanceSquared = offsetX * offsetX + offsetY * offsetY;
-      const targetRange = GREEN_DRAGON_RANGE + CHEF_RADIUS;
-      if (distanceSquared <= targetRange * targetRange && distanceSquared < nearestDistanceSquared) {
-        target = enemy;
-        nearestDistanceSquared = distanceSquared;
-      }
-    }
-
-    if (target === null) {
-      this.attackCooldown = 0;
-      return;
-    }
-
-    const targetOffsetX = target.x - this.player.x;
-    const targetOffsetY = target.y - this.player.y;
-    const targetDistance = Math.sqrt(targetOffsetX * targetOffsetX + targetOffsetY * targetOffsetY);
-    const facingX = targetDistance > 0.0001 ? targetOffsetX / targetDistance : this.player.facingX;
-    const facingY = targetDistance > 0.0001 ? targetOffsetY / targetDistance : this.player.facingY;
+    const facingX = this.player.facingX;
+    const facingY = this.player.facingY;
+    let hitAnyEnemy = false;
     for (let index = 0; index < this.enemies.length; index += 1) {
       const enemy = this.enemies[index];
       if (!enemy.active) {
@@ -312,7 +288,13 @@ export class BattleWorld {
       )) {
         continue;
       }
+      hitAnyEnemy = true;
       this.hitEnemy(enemy, GREEN_DRAGON_DAMAGE, facingX, facingY);
+    }
+
+    if (!hitAnyEnemy) {
+      this.attackCooldown = 0;
+      return;
     }
 
     this.attack.serial += 1;

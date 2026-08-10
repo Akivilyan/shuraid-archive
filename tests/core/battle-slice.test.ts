@@ -75,21 +75,59 @@ test('automatic attack stays idle without a target and fires after a chef enters
   }
   const attack = world.getSnapshot().attack;
   assert.equal(attack.serial, 1);
-  assert.ok(Math.abs(Math.hypot(attack.facingX, attack.facingY) - 1) < 0.0001);
+  assert.equal(attack.facingX, 0);
+  assert.equal(attack.facingY, 1);
   assert.equal(attack.range, GREEN_DRAGON_RANGE);
   assert.equal(attack.halfAngle, GREEN_DRAGON_HALF_ANGLE);
 });
 
-test('automatic attack does not overwrite the movement-facing snapshot for one frame', () => {
+test('Green Dragon Slash ignores enemies behind and attacks along player facing', () => {
   const world = new BattleWorld();
   world.setMovement(1, 0);
-
-  for (let index = 0; index < 600 && world.getSnapshot().attack.serial === 0; index += 1) {
-    world.step(FIXED_STEP_SECONDS);
-  }
+  world.step(FIXED_STEP_SECONDS);
+  world.setMovement(0, 0);
 
   const snapshot = world.getSnapshot();
+  const player = snapshot.player;
+  for (let index = 0; index < snapshot.enemies.length; index += 1) {
+    const enemy = snapshot.enemies[index] as {
+      active: boolean;
+      x: number;
+      y: number;
+      previousX: number;
+      previousY: number;
+    };
+    if (!enemy.active) {
+      continue;
+    }
+    enemy.x = player.x - 30;
+    enemy.y = player.y;
+    enemy.previousX = enemy.x;
+    enemy.previousY = enemy.y;
+  }
+  world.step(FIXED_STEP_SECONDS);
+  assert.equal(snapshot.attack.serial, 0);
+
+  for (let index = 0; index < snapshot.enemies.length; index += 1) {
+    const enemy = snapshot.enemies[index] as {
+      active: boolean;
+      x: number;
+      y: number;
+      previousX: number;
+      previousY: number;
+    };
+    if (!enemy.active) {
+      continue;
+    }
+    enemy.x = player.x + 30;
+    enemy.y = player.y;
+    enemy.previousX = enemy.x;
+    enemy.previousY = enemy.y;
+  }
+  world.step(FIXED_STEP_SECONDS);
   assert.equal(snapshot.attack.serial, 1);
+  assert.equal(snapshot.attack.facingX, 1);
+  assert.equal(snapshot.attack.facingY, 0);
   assert.equal(snapshot.player.facingX, 1);
   assert.equal(snapshot.player.facingY, 0);
 });

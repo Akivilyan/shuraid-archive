@@ -50,18 +50,24 @@ export class BattleSlice extends Component {
     private contactTimer = 0;
     private enemySlowTimer = 0;
     private respawnTimer = 0;
+    private playerHealth = 10;
     private enemyHealth = 3;
     private kills = 0;
 
     private readonly playerSpeed = 280;
     private readonly enemySpeed = 72;
     private readonly attackCooldown = 1.0;
-    private readonly attackRadius = 112;
-    private readonly attackHalfAngle = 0.48;
-    private readonly separationDistance = 72;
+    private readonly playerCollisionRadius = 58;
+    private readonly enemyCollisionRadius = 42;
+    private readonly separationDistance = this.playerCollisionRadius + this.enemyCollisionRadius;
+    private readonly contactDamage = 1;
+    private readonly contactDamageCooldown = 1.0;
+    private readonly maxPlayerHealth = 10;
     private readonly maxEnemyHealth = 3;
     private readonly slashVisualScale = 0.58;
     private readonly slashVisualOffset = 72;
+    private readonly slashHitRadius = 220;
+    private readonly slashRearAllowance = 58;
 
     protected onLoad(): void {
         this.canvasTransform = this.node.getComponent(UITransform)!;
@@ -117,6 +123,7 @@ export class BattleSlice extends Component {
         this.updatePlayer(dt);
         this.updateEnemy(dt);
         this.resolveEntityCollision();
+        this.applyContactDamage();
         this.updateEnemyHealthBarPosition();
 
         if (this.attackTimer <= 0) {
@@ -197,10 +204,6 @@ export class BattleSlice extends Component {
                 0,
             );
             this.faceNode(this.enemyVisual, directionX);
-        } else if (this.contactTimer <= 0) {
-            this.contactTimer = 1.05;
-            this.playMovement('guan-hurt', true);
-            this.hurtTimer = 0.25;
         }
     }
 
@@ -237,6 +240,23 @@ export class BattleSlice extends Component {
         this.enemy.setPosition(this.scratchEnemyPosition);
     }
 
+    private applyContactDamage(): void {
+        if (!this.enemy.active || this.contactTimer > 0 || this.playerHealth <= 0) {
+            return;
+        }
+
+        const distance = Vec3.distance(this.player.position, this.enemy.position);
+        if (distance > this.separationDistance + 1) {
+            return;
+        }
+
+        this.playerHealth = Math.max(0, this.playerHealth - this.contactDamage);
+        this.contactTimer = this.contactDamageCooldown;
+        this.playMovement('guan-hurt', true);
+        this.hurtTimer = 0.25;
+        this.updateHud();
+    }
+
     private performAttack(): void {
         this.showSlash();
 
@@ -246,15 +266,18 @@ export class BattleSlice extends Component {
 
         const dx = this.enemy.position.x - this.player.position.x;
         const dy = this.enemy.position.y - this.player.position.y;
-        const distance = Math.hypot(dx, dy);
-        if (distance > this.attackRadius || distance < 0.001) {
+        const forwardDistance = dx * this.lastDirection.x + dy * this.lastDirection.y;
+        if (forwardDistance < -this.slashRearAllowance) {
             return;
         }
 
-        const inverseDistance = 1 / distance;
-        const dot = dx * inverseDistance * this.lastDirection.x
-            + dy * inverseDistance * this.lastDirection.y;
-        if (dot < Math.cos(this.attackHalfAngle)) {
+        const hitCenterX = this.player.position.x + this.lastDirection.x * this.slashVisualOffset;
+        const hitCenterY = this.player.position.y + this.lastDirection.y * this.slashVisualOffset;
+        const hitDx = this.enemy.position.x - hitCenterX;
+        const hitDy = this.enemy.position.y - hitCenterY;
+        const hitDistance = Math.hypot(hitDx, hitDy);
+        const effectiveHitRadius = this.slashHitRadius + this.enemyCollisionRadius;
+        if (hitDistance > effectiveHitRadius) {
             return;
         }
 
@@ -263,6 +286,8 @@ export class BattleSlice extends Component {
         this.enemySprite.color = this.enemyHitColor;
         this.hitFlashTimer = 0.12;
 
+        const distance = Math.max(0.001, Math.hypot(dx, dy));
+        const inverseDistance = 1 / distance;
         this.scratchEnemyPosition.set(
             this.enemy.position.x + dx * inverseDistance * 18,
             this.enemy.position.y + dy * inverseDistance * 18,
@@ -402,7 +427,7 @@ export class BattleSlice extends Component {
         const enemyStatus = this.enemy.active
             ? `厨师长 HP ${this.enemyHealth}/${this.maxEnemyHealth}`
             : '厨师长 已击破';
-        this.scoreLabel.string = `击破 ${this.kills}    ${enemyStatus}    指尖移动 · 青龙斩自动挥出`;
+        this.scoreLabel.string = `关羽 HP ${this.playerHealth}/${this.maxPlayerHealth}    击破 ${this.kills}    ${enemyStatus}`;
         const size = this.canvasTransform.contentSize;
         this.scoreLabel.node.setPosition(0, size.height * 0.5 - 52, 0);
     }

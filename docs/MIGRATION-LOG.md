@@ -28,3 +28,12 @@
 - 已生成 `assets/prefabs/characters/GuanYu.prefab`，根节点为 `GuanYu`，显示节点为 `Visual`，Sprite 和 Animation 均使用编辑器资源引用；
 - `assets/Bootstrap.scene` 已放置一个原生 `GuanYu/Visual` 节点并引用上述 SpriteFrame 与 AnimationClip，不在运行时拼装角色节点或手工切帧；
 - 2026-08-11 微信小游戏 Release 自动构建成功，Cocos 官方成功退出码为 36；六张角色 PNG 均进入 `assets/main/native` 构建产物。
+
+## 2026-08-11：厨师长与首个可玩切片
+
+- 来源：`M:\codex\ShuRaid\assets\art\runtime\enemies\head-cook-atlas.png`；只迁入当前敌人需要的这一张透明图集，不迁入旧脚本、旧 `.meta` 或运行时切帧逻辑；
+- 当前工程使用 `head-cook-atlas.plist` 在编辑器导入阶段生成 6 个 SpriteFrame，运行时不手工切图；
+- 已创建 `assets/prefabs/enemies/HeadCook.prefab` 和场景内厨师长节点；
+- 已新增 `assets/scripts/gameplay/BattleSlice.ts`，负责现阶段的移动、朝向、厨师长追击、接触反馈、青龙斩判定、减速刷新、击杀和复用重生；
+- 青龙斩保持设计值：间隔 0.6 秒、半径 112、半角 0.48 弧度，按最后移动朝向攻击，不自动锁定敌人；
+- 微信小游戏 Release 构建成功，退出码 36；未执行真机验收、上传或发布。

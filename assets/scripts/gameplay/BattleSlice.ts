@@ -22,7 +22,6 @@ export class BattleSlice extends Component {
     private readonly moveTarget = new Vec3();
     private readonly lastDirection = new Vec2(1, 0);
     private readonly touchLocation = new Vec2();
-    private readonly scratchPosition = new Vec3();
     private readonly scratchEnemyPosition = new Vec3();
     private readonly touchPosition = new Vec3();
     private readonly enemyNormalColor = new Color(255, 255, 255, 255);
@@ -40,6 +39,7 @@ export class BattleSlice extends Component {
     private enemyHealthGraphics!: Graphics;
     private scoreLabel!: Label;
     private canvasTransform!: UITransform;
+    private arena!: Node;
 
     private touchActive = false;
     private movementState = '';
@@ -73,6 +73,7 @@ export class BattleSlice extends Component {
         this.enemySprite = this.enemyVisual.getComponent(Sprite)!;
         this.slashVisual = this.requireChild(this.node, 'SlashVisual');
         this.slashAnimation = this.slashVisual.getComponent(Animation)!;
+        this.arena = this.requireChild(this.node, 'Arena');
         this.enemyHealthBar = this.requireChild(this.node, 'EnemyHealthBar');
         this.enemyHealthGraphics = this.enemyHealthBar.getComponent(Graphics)
             ?? this.enemyHealthBar.addComponent(Graphics);
@@ -85,6 +86,7 @@ export class BattleSlice extends Component {
         this.scoreLabel.lineHeight = 46;
         this.scoreLabel.color = new Color(255, 238, 196, 255);
 
+        this.player.setPosition(0, 0, 0);
         this.moveTarget.set(this.player.position);
         this.drawArena();
         this.drawEnemyHealthBar();
@@ -143,7 +145,6 @@ export class BattleSlice extends Component {
         event.getUILocation(this.touchLocation);
         this.touchPosition.set(this.touchLocation.x, this.touchLocation.y, 0);
         this.canvasTransform.convertToNodeSpaceAR(this.touchPosition, this.moveTarget);
-        this.clampToArena(this.moveTarget, 44);
     }
 
     private updatePlayer(dt: number): void {
@@ -155,16 +156,10 @@ export class BattleSlice extends Component {
 
         if (this.touchActive && distance > 2) {
             const inverseDistance = 1 / distance;
-            const step = Math.min(distance, this.playerSpeed * dt);
+            const step = this.playerSpeed * dt;
             const directionX = dx * inverseDistance;
             const directionY = dy * inverseDistance;
-            this.scratchPosition.set(
-                position.x + directionX * step,
-                position.y + directionY * step,
-                0,
-            );
-            this.clampToArena(this.scratchPosition, 44);
-            this.player.setPosition(this.scratchPosition);
+            this.panWorld(-directionX * step, -directionY * step);
             this.lastDirection.set(directionX, directionY);
             this.faceNode(this.playerVisual, directionX);
             moving = true;
@@ -234,20 +229,11 @@ export class BattleSlice extends Component {
         const directionY = dy * inverseDistance;
         const overlap = this.separationDistance - distance;
 
-        this.scratchPosition.set(
-            playerPosition.x - directionX * overlap * 0.55,
-            playerPosition.y - directionY * overlap * 0.55,
-            0,
-        );
-        this.clampToArena(this.scratchPosition, 44);
-        this.player.setPosition(this.scratchPosition);
-
         this.scratchEnemyPosition.set(
-            enemyPosition.x + directionX * overlap * 0.45,
-            enemyPosition.y + directionY * overlap * 0.45,
+            enemyPosition.x + directionX * overlap,
+            enemyPosition.y + directionY * overlap,
             0,
         );
-        this.clampToArena(this.scratchEnemyPosition, 44);
         this.enemy.setPosition(this.scratchEnemyPosition);
     }
 
@@ -282,7 +268,6 @@ export class BattleSlice extends Component {
             this.enemy.position.y + dy * inverseDistance * 18,
             0,
         );
-        this.clampToArena(this.scratchEnemyPosition, 44);
         this.enemy.setPosition(this.scratchEnemyPosition);
 
         if (this.enemyHealth <= 0) {
@@ -375,26 +360,42 @@ export class BattleSlice extends Component {
     }
 
     private drawArena(): void {
-        const arena = this.requireChild(this.node, 'Arena');
-        const graphics = arena.getComponent(Graphics) ?? arena.addComponent(Graphics);
+        const graphics = this.arena.getComponent(Graphics) ?? this.arena.addComponent(Graphics);
         const size = this.canvasTransform.contentSize;
-        const left = -size.width * 0.5;
-        const bottom = -size.height * 0.5;
+        const gridSize = 80;
+        const left = -size.width * 0.5 - gridSize;
+        const right = size.width * 0.5 + gridSize;
+        const bottom = -size.height * 0.5 - gridSize;
+        const top = size.height * 0.5 + gridSize;
         graphics.clear();
         graphics.fillColor = new Color(44, 35, 30, 255);
-        graphics.rect(left, bottom, size.width, size.height);
+        graphics.rect(left, bottom, right - left, top - bottom);
         graphics.fill();
         graphics.strokeColor = new Color(111, 82, 54, 90);
         graphics.lineWidth = 2;
-        for (let x = left; x <= -left; x += 80) {
+        for (let x = left; x <= right; x += gridSize) {
             graphics.moveTo(x, bottom);
-            graphics.lineTo(x, -bottom);
+            graphics.lineTo(x, top);
         }
-        for (let y = bottom; y <= -bottom; y += 80) {
+        for (let y = bottom; y <= top; y += gridSize) {
             graphics.moveTo(left, y);
-            graphics.lineTo(-left, y);
+            graphics.lineTo(right, y);
         }
         graphics.stroke();
+    }
+
+    private panWorld(offsetX: number, offsetY: number): void {
+        this.enemy.setPosition(
+            this.enemy.position.x + offsetX,
+            this.enemy.position.y + offsetY,
+            0,
+        );
+
+        const gridSize = 80;
+        const halfGrid = gridSize * 0.5;
+        const wrappedX = ((this.arena.position.x + offsetX + halfGrid) % gridSize + gridSize) % gridSize - halfGrid;
+        const wrappedY = ((this.arena.position.y + offsetY + halfGrid) % gridSize + gridSize) % gridSize - halfGrid;
+        this.arena.setPosition(wrappedX, wrappedY, 0);
     }
 
     private updateHud(): void {
@@ -418,16 +419,13 @@ export class BattleSlice extends Component {
         if (Math.abs(directionX) < 0.02) {
             return;
         }
+        const nextFacingSign = directionX >= 0 ? 1 : -1;
         const scale = node.scale;
-        node.setScale(Math.abs(scale.x) * (directionX >= 0 ? 1 : -1), scale.y, scale.z);
-    }
-
-    private clampToArena(position: Vec3, margin: number): void {
-        const size = this.canvasTransform.contentSize;
-        const halfWidth = Math.max(0, size.width * 0.5 - margin);
-        const halfHeight = Math.max(0, size.height * 0.5 - margin);
-        position.x = Math.max(-halfWidth, Math.min(halfWidth, position.x));
-        position.y = Math.max(-halfHeight, Math.min(halfHeight, position.y));
+        const currentFacingSign = scale.x >= 0 ? 1 : -1;
+        if (nextFacingSign === currentFacingSign) {
+            return;
+        }
+        node.setScale(Math.abs(scale.x) * nextFacingSign, scale.y, scale.z);
     }
 
     private requireChild(parent: Node, name: string): Node {

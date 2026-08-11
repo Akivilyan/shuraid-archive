@@ -80,6 +80,7 @@ export class BattleSlice extends Component {
     private readonly moveTarget = new Vec3();
     private readonly lastDirection = new Vec2(1, 0);
     private readonly touchLocation = new Vec2();
+    private readonly scratchPlayerPosition = new Vec3();
     private readonly scratchEnemyPosition = new Vec3();
     private readonly touchPosition = new Vec3();
     private readonly enemyNormalColor = new Color(255, 255, 255, 255);
@@ -239,12 +240,18 @@ export class BattleSlice extends Component {
 
         if (this.touchActive && distance > 2) {
             const inverseDistance = 1 / distance;
-            const step = this.playerSpeed * dt;
+            const step = Math.min(distance, this.playerSpeed * dt);
             const directionX = dx * inverseDistance;
             const directionY = dy * inverseDistance;
-            this.panWorld(-directionX * step, -directionY * step);
+            this.scratchPlayerPosition.set(
+                position.x + directionX * step,
+                position.y + directionY * step,
+                0,
+            );
+            this.clampPlayerPosition(this.scratchPlayerPosition);
+            this.player.setPosition(this.scratchPlayerPosition);
             this.lastDirection.set(directionX, directionY);
-            this.faceNode(this.playerVisual, directionX);
+            this.faceNode(this.playerVisual, directionX, false);
             moving = true;
         }
 
@@ -450,18 +457,12 @@ export class BattleSlice extends Component {
         graphics.stroke();
     }
 
-    private panWorld(offsetX: number, offsetY: number): void {
-        this.enemy.setPosition(
-            this.enemy.position.x + offsetX,
-            this.enemy.position.y + offsetY,
-            0,
-        );
-
-        const gridSize = 80;
-        const halfGrid = gridSize * 0.5;
-        const wrappedX = ((this.arena.position.x + offsetX + halfGrid) % gridSize + gridSize) % gridSize - halfGrid;
-        const wrappedY = ((this.arena.position.y + offsetY + halfGrid) % gridSize + gridSize) % gridSize - halfGrid;
-        this.arena.setPosition(wrappedX, wrappedY, 0);
+    private clampPlayerPosition(position: Vec3): void {
+        const size = this.canvasTransform.contentSize;
+        const halfWidth = size.width * 0.5 - 92;
+        const halfHeight = size.height * 0.5 - 82;
+        position.x = Math.max(-halfWidth, Math.min(halfWidth, position.x));
+        position.y = Math.max(-halfHeight, Math.min(halfHeight, position.y));
     }
 
     private updateHud(): void {
@@ -481,11 +482,12 @@ export class BattleSlice extends Component {
         this.playerAnimation.play(name);
     }
 
-    private faceNode(node: Node, directionX: number): void {
+    private faceNode(node: Node, directionX: number, sourceFacesRight = true): void {
         if (Math.abs(directionX) < 0.02) {
             return;
         }
-        const nextFacingSign = directionX >= 0 ? 1 : -1;
+        const rightFacingSign = sourceFacesRight ? 1 : -1;
+        const nextFacingSign = directionX >= 0 ? rightFacingSign : -rightFacingSign;
         const scale = node.scale;
         const currentFacingSign = scale.x >= 0 ? 1 : -1;
         if (nextFacingSign === currentFacingSign) {

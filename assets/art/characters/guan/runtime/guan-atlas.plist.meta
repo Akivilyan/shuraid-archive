@@ -1,0 +1,293 @@
+{
+  "ver": "1.0.8",
+  "importer": "sprite-atlas",
+  "imported": true,
+  "uuid": "6b4ebb61-f8da-495a-aed5-3de78f4f0b0d",
+  "files": [
+    ".json"
+  ],
+  "subMetas": {
+    "2cbf3": {
+      "importer": "sprite-frame",
+      "uuid": "6b4ebb61-f8da-495a-aed5-3de78f4f0b0d@2cbf3",
+      "displayName": "",
+      "id": "2cbf3",
+      "name": "guan-idle",
+      "userData": {
+        "trimThreshold": 1,
+        "rotated": false,
+        "offsetX": 0,
+        "offsetY": 0,
+        "trimX": 0,
+        "trimY": 0,
+        "width": 384,
+        "height": 288,
+        "rawWidth": 384,
+        "rawHeight": 288,
+        "borderTop": 0,
+        "borderBottom": 0,
+        "borderLeft": 0,
+        "borderRight": 0,
+        "packable": true,
+        "pixelsToUnit": 100,
+        "pivotX": 0.5,
+        "pivotY": 0.5,
+        "meshType": 0,
+        "vertices": {
+          "rawPosition": [],
+          "indexes": [],
+          "uv": [],
+          "nuv": [],
+          "minPos": [],
+          "maxPos": []
+        },
+        "isUuid": true,
+        "imageUuidOrDatabaseUri": "3a7961c6-1d77-4c58-a13b-d87182f7c520@6c48a",
+        "atlasUuid": "6b4ebb61-f8da-495a-aed5-3de78f4f0b0d",
+        "trimType": "auto"
+      },
+      "ver": "1.0.12",
+      "imported": true,
+      "files": [
+        ".json"
+      ],
+      "subMetas": {}
+    },
+    "12f1e": {
+      "importer": "sprite-frame",
+      "uuid": "6b4ebb61-f8da-495a-aed5-3de78f4f0b0d@12f1e",
+      "displayName": "",
+      "id": "12f1e",
+      "name": "guan-move-a",
+      "userData": {
+        "trimThreshold": 1,
+        "rotated": false,
+        "offsetX": 0,
+        "offsetY": 0,
+        "trimX": 384,
+        "trimY": 0,
+        "width": 384,
+        "height": 288,
+        "rawWidth": 384,
+        "rawHeight": 288,
+        "borderTop": 0,
+        "borderBottom": 0,
+        "borderLeft": 0,
+        "borderRight": 0,
+        "packable": true,
+        "pixelsToUnit": 100,
+        "pivotX": 0.5,
+        "pivotY": 0.5,
+        "meshType": 0,
+        "vertices": {
+          "rawPosition": [],
+          "indexes": [],
+          "uv": [],
+          "nuv": [],
+          "minPos": [],
+          "maxPos": []
+        },
+        "isUuid": true,
+        "imageUuidOrDatabaseUri": "3a7961c6-1d77-4c58-a13b-d87182f7c520@6c48a",
+        "atlasUuid": "6b4ebb61-f8da-495a-aed5-3de78f4f0b0d",
+        "trimType": "auto"
+      },
+      "ver": "1.0.12",
+      "imported": true,
+      "files": [
+        ".json"
+      ],
+      "subMetas": {}
+    },
+    "c7dc8": {
+      "importer": "sprite-frame",
+      "uuid": "6b4ebb61-f8da-495a-aed5-3de78f4f0b0d@c7dc8",
+      "displayName": "",
+      "id": "c7dc8",
+      "name": "guan-move-b",
+      "userData": {
+        "trimThreshold": 1,
+        "rotated": false,
+        "offsetX": 0,
+        "offsetY": 0,
+        "trimX": 768,
+        "trimY": 0,
+        "width": 384,
+        "height": 288,
+        "rawWidth": 384,
+        "rawHeight": 288,
+        "borderTop": 0,
+        "borderBottom": 0,
+        "borderLeft": 0,
+        "borderRight": 0,
+        "packable": true,
+        "pixelsToUnit": 100,
+        "pivotX": 0.5,
+        "pivotY": 0.5,
+        "meshType": 0,
+        "vertices": {
+          "rawPosition": [],
+          "indexes": [],
+          "uv": [],
+          "nuv": [],
+          "minPos": [],
+          "maxPos": []
+        },
+        "isUuid": true,
+        "imageUuidOrDatabaseUri": "3a7961c6-1d77-4c58-a13b-d87182f7c520@6c48a",
+        "atlasUuid": "6b4ebb61-f8da-495a-aed5-3de78f4f0b0d",
+        "trimType": "auto"
+      },
+      "ver": "1.0.12",
+      "imported": true,
+      "files": [
+        ".json"
+      ],
+      "subMetas": {}
+    },
+    "2901d": {
+      "importer": "sprite-frame",
+      "uuid": "6b4ebb61-f8da-495a-aed5-3de78f4f0b0d@2901d",
+      "displayName": "",
+      "id": "2901d",
+      "name": "guan-attack-windup",
+      "userData": {
+        "trimThreshold": 1,
+        "rotated": false,
+        "offsetX": 0,
+        "offsetY": 0,
+        "trimX": 1152,
+        "trimY": 0,
+        "width": 384,
+        "height": 288,
+        "rawWidth": 384,
+        "rawHeight": 288,
+        "borderTop": 0,
+        "borderBottom": 0,
+        "borderLeft": 0,
+        "borderRight": 0,
+        "packable": true,
+        "pixelsToUnit": 100,
+        "pivotX": 0.5,
+        "pivotY": 0.5,
+        "meshType": 0,
+        "vertices": {
+          "rawPosition": [],
+          "indexes": [],
+          "uv": [],
+          "nuv": [],
+          "minPos": [],
+          "maxPos": []
+        },
+        "isUuid": true,
+        "imageUuidOrDatabaseUri": "3a7961c6-1d77-4c58-a13b-d87182f7c520@6c48a",
+        "atlasUuid": "6b4ebb61-f8da-495a-aed5-3de78f4f0b0d",
+        "trimType": "auto"
+      },
+      "ver": "1.0.12",
+      "imported": true,
+      "files": [
+        ".json"
+      ],
+      "subMetas": {}
+    },
+    "a30fe": {
+      "importer": "sprite-frame",
+      "uuid": "6b4ebb61-f8da-495a-aed5-3de78f4f0b0d@a30fe",
+      "displayName": "",
+      "id": "a30fe",
+      "name": "guan-attack-sweep",
+      "userData": {
+        "trimThreshold": 1,
+        "rotated": false,
+        "offsetX": 0,
+        "offsetY": 0,
+        "trimX": 1536,
+        "trimY": 0,
+        "width": 384,
+        "height": 288,
+        "rawWidth": 384,
+        "rawHeight": 288,
+        "borderTop": 0,
+        "borderBottom": 0,
+        "borderLeft": 0,
+        "borderRight": 0,
+        "packable": true,
+        "pixelsToUnit": 100,
+        "pivotX": 0.5,
+        "pivotY": 0.5,
+        "meshType": 0,
+        "vertices": {
+          "rawPosition": [],
+          "indexes": [],
+          "uv": [],
+          "nuv": [],
+          "minPos": [],
+          "maxPos": []
+        },
+        "isUuid": true,
+        "imageUuidOrDatabaseUri": "3a7961c6-1d77-4c58-a13b-d87182f7c520@6c48a",
+        "atlasUuid": "6b4ebb61-f8da-495a-aed5-3de78f4f0b0d",
+        "trimType": "auto"
+      },
+      "ver": "1.0.12",
+      "imported": true,
+      "files": [
+        ".json"
+      ],
+      "subMetas": {}
+    },
+    "8bdd8": {
+      "importer": "sprite-frame",
+      "uuid": "6b4ebb61-f8da-495a-aed5-3de78f4f0b0d@8bdd8",
+      "displayName": "",
+      "id": "8bdd8",
+      "name": "guan-hurt",
+      "userData": {
+        "trimThreshold": 1,
+        "rotated": false,
+        "offsetX": 0,
+        "offsetY": 0,
+        "trimX": 1920,
+        "trimY": 0,
+        "width": 384,
+        "height": 288,
+        "rawWidth": 384,
+        "rawHeight": 288,
+        "borderTop": 0,
+        "borderBottom": 0,
+        "borderLeft": 0,
+        "borderRight": 0,
+        "packable": true,
+        "pixelsToUnit": 100,
+        "pivotX": 0.5,
+        "pivotY": 0.5,
+        "meshType": 0,
+        "vertices": {
+          "rawPosition": [],
+          "indexes": [],
+          "uv": [],
+          "nuv": [],
+          "minPos": [],
+          "maxPos": []
+        },
+        "isUuid": true,
+        "imageUuidOrDatabaseUri": "3a7961c6-1d77-4c58-a13b-d87182f7c520@6c48a",
+        "atlasUuid": "6b4ebb61-f8da-495a-aed5-3de78f4f0b0d",
+        "trimType": "auto"
+      },
+      "ver": "1.0.12",
+      "imported": true,
+      "files": [
+        ".json"
+      ],
+      "subMetas": {}
+    }
+  },
+  "userData": {
+    "atlasTextureName": "guan-atlas.png",
+    "format": 2,
+    "uuid": "6b4ebb61-f8da-495a-aed5-3de78f4f0b0d",
+    "textureUuid": "3a7961c6-1d77-4c58-a13b-d87182f7c520@6c48a"
+  }
+}

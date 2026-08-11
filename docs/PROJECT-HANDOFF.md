@@ -5,13 +5,13 @@
 - 主项目：`M:\codex\ShuRaid2D`。
 - Cocos Creator：3.8.8，项目由官方 Empty (2D) 模板创建。
 - Git：敏捷工作流清理边界为 `329e736 DOCS: reset project workflow for agile Cocos development`；最新提交必须通过当前 `git log -1` 获取，不在文档里长期固定。
-- 当前阶段：暂停扩展内容，先校正关羽表现层与 Cocos 编辑器工作流。
-- `assets/Bootstrap.scene` 是当前唯一场景；阶段 1 已迁入关羽待机、移动、攻击和受击所需的六张独立透明 PNG，并完成四个 AnimationClip、`GuanYu.prefab` 及场景内原生关羽节点。
+- 当前阶段：关羽表现层已按旧版实际运行契约重建，等待用户集中测试后继续扩展内容。
+- `assets/Bootstrap.scene` 是当前唯一场景；关羽改用单张旧运行图集生成的原生 SpriteAtlas，身体保留待机、移动和受击三个 AnimationClip，青龙斩继续由独立节点播放并负责判定。
 - 首个可玩切片已落地：连续单指移动、待机/移动/攻击/受击动画切换、厨师长追击与接触伤害、按最后移动朝向每 0.6 秒发动青龙斩、命中减速、三次命中击杀及边缘重生。
 - 项目扩展 `extensions/shuraid-editor-tools` 只在菜单命令触发时运行，不在项目启动时自动切换或保存场景，避免弹出未命名场景保存框。
 - Cocos 编辑器已经识别项目，生成了本地 `library/`、`temp/` 和 `profiles/` 目录。
 - 2026-08-11 已使用 Cocos Creator 3.8.8 CLI 完成微信小游戏 Release 构建，官方成功退出码为 36。
-- 最新 Release 产物位于 `build/wechatgame`：`debug=false`、竖屏、50 个文件、约 3.855 MiB；关羽、厨师长 SpriteAtlas 和 `BattleSlice` 均已进入构建包。
+- 最新 Release 产物位于 `build/wechatgame`（2026-08-11 14:45）：`debug=false`、竖屏、42 个文件、约 4.05 MiB；关羽新 SpriteAtlas、厨师长 SpriteAtlas 和 `BattleSlice` 均已进入构建包。
 - 微信开发者工具 CLI 已成功导入并打开该本地构建包；未执行预览、上传或发布。
 - 源工程边界扫描未发现 `project.config.json`、`game.json`、`app.js`、`build-templates` 或原生微信小游戏源码；这些文件只存在于 Cocos 生成的 `build/` 产物中。
 - 用户已在微信开发者工具中确认空场景正常启动且控制台无持续错误。
@@ -22,6 +22,9 @@
 - 原生微信小程序开发 skill 不适用于本 Cocos 项目，今后禁止用它指导场景、资源、动画、战斗或性能工作。
 - 已安装项目级 `Funplay MCP for Cocos` v0.4.6，固定监听 `127.0.0.1:8765`，使用 `core` 39 工具、安全检查开启、session 关闭；健康检查、Codex 配置和真实 `get_project_info`/Scene/Prefab/资源调用均已成功。
 - MCP 已能打开 `Bootstrap.scene` 并读回 UUID `4baccbd0-bcd1-4d13-986e-affe016c1b66`。场景切换是异步操作，调用后必须等编辑器完成并读回正确场景再继续。
+- 底层 `scene/save-scene` 会打开 Windows“另存场景”对话框并等待人工输入，调用端因而超时；后续禁止使用该消息，已知场景只通过 AssetDB 对明确的场景 URL 定向保存并读回。
+- 编辑器已运行时，Creator CLI 会额外启动一套 GUI 进程且不一定进入 Builder。当前可靠构建入口是 MCP 在现有编辑器中先调用 Builder `check-and-complete-options`，再用 `add-task` 加入任务队列，并通过 `query-tasks-info` 等待成功。
+- 关羽现用图集位于 `assets/art/characters/guan/runtime/guan-atlas.png`，六帧均为 384×288；显示缩放为 `76/288`，锚点为 `(230/384, 17/76)`。首轮 512×384 独立 PNG 和身体攻击 AnimationClip 已移除，可通过 Git 恢复。
 
 当前磁盘文件和 Git 状态高于本交接文档；开始工作前必须重新检查两者。
 
@@ -35,14 +38,14 @@
 4. [x] 由用户手动确认空场景正常启动且控制台无持续错误；
 5. [x] 记录 Release 包体与工程边界；玩法性能和真机手感留到首个可玩切片验证。
 
-阶段 1 的人物资源首轮装配已完成，但视觉基线需要替换：
+阶段 1 的人物资源与视觉基线已完成替换：
 
-1. [x] 迁入关羽当前马上需要的六张独立动作帧；
-2. [x] 由 Cocos 生成全新 SpriteFrame 元数据；
-3. [x] 创建待机、移动、普攻、受击四个原生 AnimationClip；
+1. [x] 迁入旧版实际运行的关羽图集并切出六个 384×288 SpriteFrame；
+2. [x] 由 Cocos 生成全新 SpriteAtlas/SpriteFrame 元数据；
+3. [x] 创建待机、移动、受击三个身体 AnimationClip，攻击效果继续独立播放；
 4. [x] 创建 `GuanYu.prefab`，Sprite 使用 `RAW` Size Mode；
 5. [x] 在 `Bootstrap.scene` 中放置关羽原生节点并完成 Release 构建验证；
-6. [ ] 使用旧运行图集和精确显示契约重建关羽表现层。
+6. [x] 使用旧运行图集和精确显示契约重建关羽表现层。
 
 首个可玩切片已实现：
 
@@ -65,9 +68,8 @@
 
 ## 下一步
 
-1. 通过 MCP 使用旧运行图集一次性重建关羽 SpriteAtlas、AnimationClip、枢轴和显示尺寸；
-2. 保留现有战斗逻辑与独立青龙斩，只替换关羽表现层，不重置项目；
-3. 完成一次 MCP 场景/引用/截图检查、Release 构建和本地提交，再交给用户测试；
-4. 关羽比例、移动和攻击表现通过后再扩为多敌人对象池。
+1. 用户测试关羽比例、移动手感、青龙斩位置/尺寸与命中表现；
+2. 根据集中反馈一次性调整表现参数；
+3. 关羽表现通过后扩展多敌人对象池，并开始迁入第一张真实场景的必要美术资源。
 
 `AGENTS.md` 已在 MCP 实测后重写为正式敏捷工作流：不再逐文件验证、不设逐阶段门禁、不手写编辑器序列化资源、不在每个小改动后重复构建。

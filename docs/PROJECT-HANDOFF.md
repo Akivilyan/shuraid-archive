@@ -24,6 +24,8 @@
 - MCP 已能打开 `Bootstrap.scene` 并读回 UUID `4baccbd0-bcd1-4d13-986e-affe016c1b66`。场景切换是异步操作，调用后必须等编辑器完成并读回正确场景再继续。
 - 底层 `scene/save-scene` 会打开 Windows“另存场景”对话框并等待人工输入，调用端因而超时；后续禁止使用该消息，已知场景只通过 AssetDB 对明确的场景 URL 定向保存并读回。
 - 编辑器已运行时，Creator CLI 会额外启动一套 GUI 进程且不一定进入 Builder。当前可靠构建入口是 MCP 在现有编辑器中先调用 Builder `check-and-complete-options`，再用 `add-task` 加入任务队列，并通过 `query-tasks-info` 等待成功。
+- 2026-08-11 自动真机调试曾报 `80051`：源码包 4128KB 超过 4MB。当前切片未使用的 Spine 3.8 引擎模块已关闭，Release 包由约 4147KB 降至 3872KB，重新构建成功。
+- 后续包体再次持续逼近上限时，备选方案是把场景/角色内容配置为 Cocos 远程 Asset Bundle，并使用微信开发者工具最后一项“开启静态资源服务器”在本地模拟远程下载；正式版本仍需 HTTPS 资源服务器、资源服务器地址和版本/缓存策略。
 - 关羽现用图集位于 `assets/art/characters/guan/runtime/guan-atlas.png`，六帧均为 384×288；微信端截图反馈 `76/288` 映射过小，当前统一显示缩放为 `0.44`，锚点保持 `(230/384, 17/76)`。首轮 512×384 独立 PNG 和身体攻击 AnimationClip 已移除，可通过 Git 恢复。
 
 当前磁盘文件和 Git 状态高于本交接文档；开始工作前必须重新检查两者。

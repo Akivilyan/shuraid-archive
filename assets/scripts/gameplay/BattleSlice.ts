@@ -21,9 +21,12 @@ const { ccclass } = _decorator;
 export class BattleSlice extends Component {
     private readonly moveTarget = new Vec3();
     private readonly lastDirection = new Vec2(1, 0);
+    private readonly touchLocation = new Vec2();
     private readonly scratchPosition = new Vec3();
     private readonly scratchEnemyPosition = new Vec3();
     private readonly touchPosition = new Vec3();
+    private readonly enemyNormalColor = new Color(255, 255, 255, 255);
+    private readonly enemyHitColor = new Color(255, 105, 78, 255);
 
     private player!: Node;
     private playerVisual!: Node;
@@ -41,7 +44,9 @@ export class BattleSlice extends Component {
     private touchActive = false;
     private movementState = '';
     private attackTimer = 0.15;
-    private attackLock = 0;
+    private hurtTimer = 0;
+    private slashTimer = 0;
+    private hitFlashTimer = 0;
     private contactTimer = 0;
     private enemySlowTimer = 0;
     private respawnTimer = 0;
@@ -55,8 +60,8 @@ export class BattleSlice extends Component {
     private readonly attackHalfAngle = 0.48;
     private readonly separationDistance = 72;
     private readonly maxEnemyHealth = 3;
-    private readonly slashVisualScale = 0.42;
-    private readonly slashVisualOffset = 54;
+    private readonly slashVisualScale = 0.58;
+    private readonly slashVisualOffset = 72;
 
     protected onLoad(): void {
         this.canvasTransform = this.node.getComponent(UITransform)!;
@@ -102,9 +107,10 @@ export class BattleSlice extends Component {
     protected update(deltaTime: number): void {
         const dt = Math.min(deltaTime, 0.05);
         this.attackTimer -= dt;
-        this.attackLock = Math.max(0, this.attackLock - dt);
+        this.hurtTimer = Math.max(0, this.hurtTimer - dt);
         this.contactTimer = Math.max(0, this.contactTimer - dt);
         this.enemySlowTimer = Math.max(0, this.enemySlowTimer - dt);
+        this.updateTimedFeedback(dt);
 
         this.updatePlayer(dt);
         this.updateEnemy(dt);
@@ -134,8 +140,8 @@ export class BattleSlice extends Component {
     };
 
     private updateTouchTarget(event: EventTouch): void {
-        const location = event.getUILocation();
-        this.touchPosition.set(location.x, location.y, 0);
+        event.getUILocation(this.touchLocation);
+        this.touchPosition.set(this.touchLocation.x, this.touchLocation.y, 0);
         this.canvasTransform.convertToNodeSpaceAR(this.touchPosition, this.moveTarget);
         this.clampToArena(this.moveTarget, 44);
     }
@@ -164,7 +170,7 @@ export class BattleSlice extends Component {
             moving = true;
         }
 
-        if (this.attackLock <= 0) {
+        if (this.hurtTimer <= 0) {
             this.playMovement(moving ? 'guan-move' : 'guan-idle');
         }
     }
@@ -199,7 +205,7 @@ export class BattleSlice extends Component {
         } else if (this.contactTimer <= 0) {
             this.contactTimer = 1.05;
             this.playMovement('guan-hurt', true);
-            this.attackLock = Math.max(this.attackLock, 0.25);
+            this.hurtTimer = 0.25;
         }
     }
 
@@ -246,9 +252,6 @@ export class BattleSlice extends Component {
     }
 
     private performAttack(): void {
-        this.playerAnimation.play('guan-attack');
-        this.movementState = 'guan-attack';
-        this.attackLock = 0.6;
         this.showSlash();
 
         if (!this.enemy.active) {
@@ -271,12 +274,8 @@ export class BattleSlice extends Component {
 
         this.enemyHealth -= 1;
         this.enemySlowTimer = 2;
-        this.enemySprite.color = new Color(255, 105, 78, 255);
-        this.scheduleOnce(() => {
-            if (this.enemySprite.isValid) {
-                this.enemySprite.color = new Color(255, 255, 255, 255);
-            }
-        }, 0.12);
+        this.enemySprite.color = this.enemyHitColor;
+        this.hitFlashTimer = 0.12;
 
         this.scratchEnemyPosition.set(
             this.enemy.position.x + dx * inverseDistance * 18,
@@ -310,11 +309,23 @@ export class BattleSlice extends Component {
         );
         this.slashVisual.setScale(this.slashVisualScale, this.slashVisualScale, 1);
         this.slashAnimation.play('green-dragon-slash');
-        this.scheduleOnce(() => {
-            if (this.slashVisual.isValid) {
+        this.slashTimer = 0.24;
+    }
+
+    private updateTimedFeedback(dt: number): void {
+        if (this.slashTimer > 0) {
+            this.slashTimer -= dt;
+            if (this.slashTimer <= 0) {
                 this.slashVisual.active = false;
             }
-        }, 0.25);
+        }
+
+        if (this.hitFlashTimer > 0) {
+            this.hitFlashTimer -= dt;
+            if (this.hitFlashTimer <= 0) {
+                this.enemySprite.color = this.enemyNormalColor;
+            }
+        }
     }
 
     private respawnEnemy(): void {
@@ -331,7 +342,7 @@ export class BattleSlice extends Component {
         this.enemy.setPosition(positions[edge]);
         this.enemyHealth = this.maxEnemyHealth;
         this.enemySlowTimer = 0;
-        this.enemySprite.color = new Color(255, 255, 255, 255);
+        this.enemySprite.color = this.enemyNormalColor;
         this.enemy.active = true;
         this.drawEnemyHealthBar();
         this.updateHud();

@@ -17,6 +17,64 @@ import {
 
 const { ccclass } = _decorator;
 
+class GreenDragonSlashEffect {
+    private remaining = 0;
+    private forwardX = 1;
+    private forwardY = 0;
+
+    public constructor(
+        private readonly node: Node,
+        private readonly animation: Animation,
+        private readonly visualScale: number,
+        private readonly forwardOffset: number,
+        private readonly hitRadius: number,
+        private readonly rearAllowance: number,
+    ) {}
+
+    public activate(origin: Readonly<Vec3>, direction: Readonly<Vec2>): void {
+        this.forwardX = direction.x;
+        this.forwardY = direction.y;
+        this.node.active = true;
+        this.node.setPosition(
+            origin.x + this.forwardX * this.forwardOffset,
+            origin.y + this.forwardY * this.forwardOffset,
+            0,
+        );
+        this.node.setRotationFromEuler(
+            0,
+            0,
+            Math.atan2(this.forwardY, this.forwardX) * 180 / Math.PI,
+        );
+        this.node.setScale(this.visualScale, this.visualScale, 1);
+        this.animation.play('green-dragon-slash');
+        this.remaining = 0.24;
+    }
+
+    public update(deltaTime: number): void {
+        if (this.remaining <= 0) {
+            return;
+        }
+
+        this.remaining -= deltaTime;
+        if (this.remaining <= 0) {
+            this.node.active = false;
+        }
+    }
+
+    public hitsCircle(targetPosition: Readonly<Vec3>, targetRadius: number): boolean {
+        const dx = targetPosition.x - this.node.position.x;
+        const dy = targetPosition.y - this.node.position.y;
+        const originDx = dx + this.forwardX * this.forwardOffset;
+        const originDy = dy + this.forwardY * this.forwardOffset;
+        const forwardDistance = originDx * this.forwardX + originDy * this.forwardY;
+        if (forwardDistance < -this.rearAllowance) {
+            return false;
+        }
+
+        return Math.hypot(dx, dy) <= this.hitRadius + targetRadius;
+    }
+}
+
 @ccclass('BattleSlice')
 export class BattleSlice extends Component {
     private readonly moveTarget = new Vec3();
@@ -33,8 +91,7 @@ export class BattleSlice extends Component {
     private enemy!: Node;
     private enemyVisual!: Node;
     private enemySprite!: Sprite;
-    private slashVisual!: Node;
-    private slashAnimation!: Animation;
+    private slashEffect!: GreenDragonSlashEffect;
     private enemyHealthBar!: Node;
     private enemyHealthGraphics!: Graphics;
     private scoreLabel!: Label;
@@ -45,7 +102,6 @@ export class BattleSlice extends Component {
     private movementState = '';
     private attackTimer = 0.15;
     private hurtTimer = 0;
-    private slashTimer = 0;
     private hitFlashTimer = 0;
     private contactTimer = 0;
     private enemySlowTimer = 0;
@@ -77,8 +133,15 @@ export class BattleSlice extends Component {
         this.enemy = this.requireChild(this.node, 'HeadCook');
         this.enemyVisual = this.requireChild(this.enemy, 'Visual');
         this.enemySprite = this.enemyVisual.getComponent(Sprite)!;
-        this.slashVisual = this.requireChild(this.node, 'SlashVisual');
-        this.slashAnimation = this.slashVisual.getComponent(Animation)!;
+        const slashVisual = this.requireChild(this.node, 'SlashVisual');
+        this.slashEffect = new GreenDragonSlashEffect(
+            slashVisual,
+            slashVisual.getComponent(Animation)!,
+            this.slashVisualScale,
+            this.slashVisualOffset,
+            this.slashHitRadius,
+            this.slashRearAllowance,
+        );
         this.arena = this.requireChild(this.node, 'Arena');
         this.enemyHealthBar = this.requireChild(this.node, 'EnemyHealthBar');
         this.enemyHealthGraphics = this.enemyHealthBar.getComponent(Graphics)
@@ -118,6 +181,7 @@ export class BattleSlice extends Component {
         this.hurtTimer = Math.max(0, this.hurtTimer - dt);
         this.contactTimer = Math.max(0, this.contactTimer - dt);
         this.enemySlowTimer = Math.max(0, this.enemySlowTimer - dt);
+        this.slashEffect.update(dt);
         this.updateTimedFeedback(dt);
 
         this.updatePlayer(dt);
@@ -258,7 +322,7 @@ export class BattleSlice extends Component {
     }
 
     private performAttack(): void {
-        this.showSlash();
+        this.slashEffect.activate(this.player.position, this.lastDirection);
 
         if (!this.enemy.active) {
             return;
@@ -266,18 +330,7 @@ export class BattleSlice extends Component {
 
         const dx = this.enemy.position.x - this.player.position.x;
         const dy = this.enemy.position.y - this.player.position.y;
-        const forwardDistance = dx * this.lastDirection.x + dy * this.lastDirection.y;
-        if (forwardDistance < -this.slashRearAllowance) {
-            return;
-        }
-
-        const hitCenterX = this.player.position.x + this.lastDirection.x * this.slashVisualOffset;
-        const hitCenterY = this.player.position.y + this.lastDirection.y * this.slashVisualOffset;
-        const hitDx = this.enemy.position.x - hitCenterX;
-        const hitDy = this.enemy.position.y - hitCenterY;
-        const hitDistance = Math.hypot(hitDx, hitDy);
-        const effectiveHitRadius = this.slashHitRadius + this.enemyCollisionRadius;
-        if (hitDistance > effectiveHitRadius) {
+        if (!this.slashEffect.hitsCircle(this.enemy.position, this.enemyCollisionRadius)) {
             return;
         }
 
@@ -305,31 +358,7 @@ export class BattleSlice extends Component {
         this.updateHud();
     }
 
-    private showSlash(): void {
-        this.slashVisual.active = true;
-        this.slashVisual.setPosition(
-            this.player.position.x + this.lastDirection.x * this.slashVisualOffset,
-            this.player.position.y + this.lastDirection.y * this.slashVisualOffset,
-            0,
-        );
-        this.slashVisual.setRotationFromEuler(
-            0,
-            0,
-            Math.atan2(this.lastDirection.y, this.lastDirection.x) * 180 / Math.PI,
-        );
-        this.slashVisual.setScale(this.slashVisualScale, this.slashVisualScale, 1);
-        this.slashAnimation.play('green-dragon-slash');
-        this.slashTimer = 0.24;
-    }
-
     private updateTimedFeedback(dt: number): void {
-        if (this.slashTimer > 0) {
-            this.slashTimer -= dt;
-            if (this.slashTimer <= 0) {
-                this.slashVisual.active = false;
-            }
-        }
-
         if (this.hitFlashTimer > 0) {
             this.hitFlashTimer -= dt;
             if (this.hitFlashTimer <= 0) {

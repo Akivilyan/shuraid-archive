@@ -55,7 +55,7 @@ export class BattleSlice extends Component {
 
     private readonly playerSpeed = 280;
     private readonly enemySpeed = 72;
-    private readonly attackCooldown = 0.6;
+    private readonly attackCooldown = 1.0;
     private readonly attackRadius = 112;
     private readonly attackHalfAngle = 0.48;
     private readonly separationDistance = 72;

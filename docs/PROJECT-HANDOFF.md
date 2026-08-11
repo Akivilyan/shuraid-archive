@@ -7,7 +7,7 @@
 - Git：敏捷工作流清理边界为 `329e736 DOCS: reset project workflow for agile Cocos development`；最新提交必须通过当前 `git log -1` 获取，不在文档里长期固定。
 - 当前阶段：关羽表现层已按旧版实际运行契约重建，等待用户集中测试后继续扩展内容。
 - `assets/Bootstrap.scene` 是当前唯一场景；关羽改用单张旧运行图集生成的原生 SpriteAtlas，身体保留待机、移动和受击三个 AnimationClip，青龙斩继续由独立节点播放并负责判定。
-- 首个可玩切片已落地：连续单指移动、待机/移动/攻击/受击动画切换、厨师长追击与接触伤害、按最后移动朝向每 0.6 秒发动青龙斩、命中减速、三次命中击杀及边缘重生。
+- 首个可玩切片已落地：连续单指移动、待机/移动/受击动画切换、厨师长追击与接触伤害、按最后移动朝向每 1.0 秒发动青龙斩、命中减速、三次命中击杀及边缘重生。
 - 项目扩展 `extensions/shuraid-editor-tools` 只在菜单命令触发时运行，不在项目启动时自动切换或保存场景，避免弹出未命名场景保存框。
 - Cocos 编辑器已经识别项目，生成了本地 `library/`、`temp/` 和 `profiles/` 目录。
 - 2026-08-11 已使用 Cocos Creator 3.8.8 CLI 完成微信小游戏 Release 构建，官方成功退出码为 36。
@@ -24,7 +24,7 @@
 - MCP 已能打开 `Bootstrap.scene` 并读回 UUID `4baccbd0-bcd1-4d13-986e-affe016c1b66`。场景切换是异步操作，调用后必须等编辑器完成并读回正确场景再继续。
 - 底层 `scene/save-scene` 会打开 Windows“另存场景”对话框并等待人工输入，调用端因而超时；后续禁止使用该消息，已知场景只通过 AssetDB 对明确的场景 URL 定向保存并读回。
 - 编辑器已运行时，Creator CLI 会额外启动一套 GUI 进程且不一定进入 Builder。当前可靠构建入口是 MCP 在现有编辑器中先调用 Builder `check-and-complete-options`，再用 `add-task` 加入任务队列，并通过 `query-tasks-info` 等待成功。
-- 关羽现用图集位于 `assets/art/characters/guan/runtime/guan-atlas.png`，六帧均为 384×288；显示缩放为 `76/288`，锚点为 `(230/384, 17/76)`。首轮 512×384 独立 PNG 和身体攻击 AnimationClip 已移除，可通过 Git 恢复。
+- 关羽现用图集位于 `assets/art/characters/guan/runtime/guan-atlas.png`，六帧均为 384×288；微信端截图反馈 `76/288` 映射过小，当前统一显示缩放为 `0.44`，锚点保持 `(230/384, 17/76)`。首轮 512×384 独立 PNG 和身体攻击 AnimationClip 已移除，可通过 Git 恢复。
 
 当前磁盘文件和 Git 状态高于本交接文档；开始工作前必须重新检查两者。
 
@@ -51,7 +51,7 @@
 
 1. [x] 指尖目标移动与边界限制；
 2. [x] 最后移动朝向驱动关羽翻面和青龙斩方向；
-3. [x] 青龙斩严格使用 0.6 秒间隔、112 半径和 0.48 弧度半角；
+3. [x] 青龙斩使用 1.0 秒间隔、112 半径和 0.48 弧度半角；
 4. [x] 厨师长追击、接触受击、命中减速刷新、击杀和复用重生；
 5. [x] 原生 SpriteAtlas、敌人 Prefab、场景节点和 Release 构建通过。
 

@@ -99,6 +99,7 @@ export class BattleSlice extends Component {
     private arena!: Node;
 
     private touchActive = false;
+    private touchTargetDirty = false;
     private movementState = '';
     private attackTimer = 0.15;
     private hurtTimer = 0;
@@ -177,6 +178,7 @@ export class BattleSlice extends Component {
 
     protected update(deltaTime: number): void {
         const dt = Math.min(deltaTime, 0.05);
+        this.flushTouchTarget();
         this.attackTimer -= dt;
         this.hurtTimer = Math.max(0, this.hurtTimer - dt);
         this.contactTimer = Math.max(0, this.contactTimer - dt);
@@ -198,22 +200,32 @@ export class BattleSlice extends Component {
 
     private readonly onTouchStart = (event: EventTouch): void => {
         this.touchActive = true;
-        this.updateTouchTarget(event);
+        this.captureTouchTarget(event);
     };
 
     private readonly onTouchMove = (event: EventTouch): void => {
         if (this.touchActive) {
-            this.updateTouchTarget(event);
+            this.captureTouchTarget(event);
         }
     };
 
     private readonly onTouchEnd = (): void => {
         this.touchActive = false;
+        this.touchTargetDirty = false;
         this.moveTarget.set(this.player.position);
     };
 
-    private updateTouchTarget(event: EventTouch): void {
+    private captureTouchTarget(event: EventTouch): void {
         event.getUILocation(this.touchLocation);
+        this.touchTargetDirty = true;
+    }
+
+    private flushTouchTarget(): void {
+        if (!this.touchTargetDirty) {
+            return;
+        }
+
+        this.touchTargetDirty = false;
         this.touchPosition.set(this.touchLocation.x, this.touchLocation.y, 0);
         this.canvasTransform.convertToNodeSpaceAR(this.touchPosition, this.moveTarget);
     }

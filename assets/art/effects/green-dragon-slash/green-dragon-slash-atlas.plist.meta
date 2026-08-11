@@ -1,0 +1,293 @@
+{
+  "ver": "1.0.8",
+  "importer": "sprite-atlas",
+  "imported": true,
+  "uuid": "92b8d4eb-abbd-4769-9ed8-28158392443c",
+  "files": [
+    ".json"
+  ],
+  "subMetas": {
+    "b1111": {
+      "importer": "sprite-frame",
+      "uuid": "92b8d4eb-abbd-4769-9ed8-28158392443c@b1111",
+      "displayName": "",
+      "id": "b1111",
+      "name": "green-dragon-slash-01",
+      "userData": {
+        "trimThreshold": 1,
+        "rotated": false,
+        "offsetX": 0,
+        "offsetY": 0,
+        "trimX": 0,
+        "trimY": 0,
+        "width": 418,
+        "height": 627,
+        "rawWidth": 418,
+        "rawHeight": 627,
+        "borderTop": 0,
+        "borderBottom": 0,
+        "borderLeft": 0,
+        "borderRight": 0,
+        "packable": true,
+        "pixelsToUnit": 100,
+        "pivotX": 0.5,
+        "pivotY": 0.5,
+        "meshType": 0,
+        "vertices": {
+          "rawPosition": [],
+          "indexes": [],
+          "uv": [],
+          "nuv": [],
+          "minPos": [],
+          "maxPos": []
+        },
+        "isUuid": true,
+        "imageUuidOrDatabaseUri": "bcd649a2-4f3f-43ef-b177-7d4d97e822be@6c48a",
+        "atlasUuid": "92b8d4eb-abbd-4769-9ed8-28158392443c",
+        "trimType": "auto"
+      },
+      "ver": "1.0.12",
+      "imported": true,
+      "files": [
+        ".json"
+      ],
+      "subMetas": {}
+    },
+    "45e04": {
+      "importer": "sprite-frame",
+      "uuid": "92b8d4eb-abbd-4769-9ed8-28158392443c@45e04",
+      "displayName": "",
+      "id": "45e04",
+      "name": "green-dragon-slash-02",
+      "userData": {
+        "trimThreshold": 1,
+        "rotated": false,
+        "offsetX": 0,
+        "offsetY": 0,
+        "trimX": 418,
+        "trimY": 0,
+        "width": 418,
+        "height": 627,
+        "rawWidth": 418,
+        "rawHeight": 627,
+        "borderTop": 0,
+        "borderBottom": 0,
+        "borderLeft": 0,
+        "borderRight": 0,
+        "packable": true,
+        "pixelsToUnit": 100,
+        "pivotX": 0.5,
+        "pivotY": 0.5,
+        "meshType": 0,
+        "vertices": {
+          "rawPosition": [],
+          "indexes": [],
+          "uv": [],
+          "nuv": [],
+          "minPos": [],
+          "maxPos": []
+        },
+        "isUuid": true,
+        "imageUuidOrDatabaseUri": "bcd649a2-4f3f-43ef-b177-7d4d97e822be@6c48a",
+        "atlasUuid": "92b8d4eb-abbd-4769-9ed8-28158392443c",
+        "trimType": "auto"
+      },
+      "ver": "1.0.12",
+      "imported": true,
+      "files": [
+        ".json"
+      ],
+      "subMetas": {}
+    },
+    "b14ed": {
+      "importer": "sprite-frame",
+      "uuid": "92b8d4eb-abbd-4769-9ed8-28158392443c@b14ed",
+      "displayName": "",
+      "id": "b14ed",
+      "name": "green-dragon-slash-03",
+      "userData": {
+        "trimThreshold": 1,
+        "rotated": false,
+        "offsetX": 0,
+        "offsetY": 0,
+        "trimX": 836,
+        "trimY": 0,
+        "width": 418,
+        "height": 627,
+        "rawWidth": 418,
+        "rawHeight": 627,
+        "borderTop": 0,
+        "borderBottom": 0,
+        "borderLeft": 0,
+        "borderRight": 0,
+        "packable": true,
+        "pixelsToUnit": 100,
+        "pivotX": 0.5,
+        "pivotY": 0.5,
+        "meshType": 0,
+        "vertices": {
+          "rawPosition": [],
+          "indexes": [],
+          "uv": [],
+          "nuv": [],
+          "minPos": [],
+          "maxPos": []
+        },
+        "isUuid": true,
+        "imageUuidOrDatabaseUri": "bcd649a2-4f3f-43ef-b177-7d4d97e822be@6c48a",
+        "atlasUuid": "92b8d4eb-abbd-4769-9ed8-28158392443c",
+        "trimType": "auto"
+      },
+      "ver": "1.0.12",
+      "imported": true,
+      "files": [
+        ".json"
+      ],
+      "subMetas": {}
+    },
+    "384e5": {
+      "importer": "sprite-frame",
+      "uuid": "92b8d4eb-abbd-4769-9ed8-28158392443c@384e5",
+      "displayName": "",
+      "id": "384e5",
+      "name": "green-dragon-slash-04",
+      "userData": {
+        "trimThreshold": 1,
+        "rotated": false,
+        "offsetX": 0,
+        "offsetY": 0,
+        "trimX": 0,
+        "trimY": 627,
+        "width": 418,
+        "height": 627,
+        "rawWidth": 418,
+        "rawHeight": 627,
+        "borderTop": 0,
+        "borderBottom": 0,
+        "borderLeft": 0,
+        "borderRight": 0,
+        "packable": true,
+        "pixelsToUnit": 100,
+        "pivotX": 0.5,
+        "pivotY": 0.5,
+        "meshType": 0,
+        "vertices": {
+          "rawPosition": [],
+          "indexes": [],
+          "uv": [],
+          "nuv": [],
+          "minPos": [],
+          "maxPos": []
+        },
+        "isUuid": true,
+        "imageUuidOrDatabaseUri": "bcd649a2-4f3f-43ef-b177-7d4d97e822be@6c48a",
+        "atlasUuid": "92b8d4eb-abbd-4769-9ed8-28158392443c",
+        "trimType": "auto"
+      },
+      "ver": "1.0.12",
+      "imported": true,
+      "files": [
+        ".json"
+      ],
+      "subMetas": {}
+    },
+    "ab94e": {
+      "importer": "sprite-frame",
+      "uuid": "92b8d4eb-abbd-4769-9ed8-28158392443c@ab94e",
+      "displayName": "",
+      "id": "ab94e",
+      "name": "green-dragon-slash-05",
+      "userData": {
+        "trimThreshold": 1,
+        "rotated": false,
+        "offsetX": 0,
+        "offsetY": 0,
+        "trimX": 418,
+        "trimY": 627,
+        "width": 418,
+        "height": 627,
+        "rawWidth": 418,
+        "rawHeight": 627,
+        "borderTop": 0,
+        "borderBottom": 0,
+        "borderLeft": 0,
+        "borderRight": 0,
+        "packable": true,
+        "pixelsToUnit": 100,
+        "pivotX": 0.5,
+        "pivotY": 0.5,
+        "meshType": 0,
+        "vertices": {
+          "rawPosition": [],
+          "indexes": [],
+          "uv": [],
+          "nuv": [],
+          "minPos": [],
+          "maxPos": []
+        },
+        "isUuid": true,
+        "imageUuidOrDatabaseUri": "bcd649a2-4f3f-43ef-b177-7d4d97e822be@6c48a",
+        "atlasUuid": "92b8d4eb-abbd-4769-9ed8-28158392443c",
+        "trimType": "auto"
+      },
+      "ver": "1.0.12",
+      "imported": true,
+      "files": [
+        ".json"
+      ],
+      "subMetas": {}
+    },
+    "8eac0": {
+      "importer": "sprite-frame",
+      "uuid": "92b8d4eb-abbd-4769-9ed8-28158392443c@8eac0",
+      "displayName": "",
+      "id": "8eac0",
+      "name": "green-dragon-slash-06",
+      "userData": {
+        "trimThreshold": 1,
+        "rotated": false,
+        "offsetX": 0,
+        "offsetY": 0,
+        "trimX": 836,
+        "trimY": 627,
+        "width": 418,
+        "height": 627,
+        "rawWidth": 418,
+        "rawHeight": 627,
+        "borderTop": 0,
+        "borderBottom": 0,
+        "borderLeft": 0,
+        "borderRight": 0,
+        "packable": true,
+        "pixelsToUnit": 100,
+        "pivotX": 0.5,
+        "pivotY": 0.5,
+        "meshType": 0,
+        "vertices": {
+          "rawPosition": [],
+          "indexes": [],
+          "uv": [],
+          "nuv": [],
+          "minPos": [],
+          "maxPos": []
+        },
+        "isUuid": true,
+        "imageUuidOrDatabaseUri": "bcd649a2-4f3f-43ef-b177-7d4d97e822be@6c48a",
+        "atlasUuid": "92b8d4eb-abbd-4769-9ed8-28158392443c",
+        "trimType": "auto"
+      },
+      "ver": "1.0.12",
+      "imported": true,
+      "files": [
+        ".json"
+      ],
+      "subMetas": {}
+    }
+  },
+  "userData": {
+    "atlasTextureName": "green-dragon-slash-atlas.png",
+    "format": 2,
+    "uuid": "92b8d4eb-abbd-4769-9ed8-28158392443c",
+    "textureUuid": "bcd649a2-4f3f-43ef-b177-7d4d97e822be@6c48a"
+  }
+}

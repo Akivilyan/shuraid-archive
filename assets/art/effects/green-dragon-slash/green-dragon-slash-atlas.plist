@@ -1,0 +1,65 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+    <key>frames</key>
+    <dict>
+        <key>green-dragon-slash-01.png</key>
+        <dict>
+            <key>frame</key><string>{{0,0},{418,627}}</string>
+            <key>offset</key><string>{0,0}</string>
+            <key>rotated</key><false/>
+            <key>sourceColorRect</key><string>{{0,0},{418,627}}</string>
+            <key>sourceSize</key><string>{418,627}</string>
+        </dict>
+        <key>green-dragon-slash-02.png</key>
+        <dict>
+            <key>frame</key><string>{{418,0},{418,627}}</string>
+            <key>offset</key><string>{0,0}</string>
+            <key>rotated</key><false/>
+            <key>sourceColorRect</key><string>{{0,0},{418,627}}</string>
+            <key>sourceSize</key><string>{418,627}</string>
+        </dict>
+        <key>green-dragon-slash-03.png</key>
+        <dict>
+            <key>frame</key><string>{{836,0},{418,627}}</string>
+            <key>offset</key><string>{0,0}</string>
+            <key>rotated</key><false/>
+            <key>sourceColorRect</key><string>{{0,0},{418,627}}</string>
+            <key>sourceSize</key><string>{418,627}</string>
+        </dict>
+        <key>green-dragon-slash-04.png</key>
+        <dict>
+            <key>frame</key><string>{{0,627},{418,627}}</string>
+            <key>offset</key><string>{0,0}</string>
+            <key>rotated</key><false/>
+            <key>sourceColorRect</key><string>{{0,0},{418,627}}</string>
+            <key>sourceSize</key><string>{418,627}</string>
+        </dict>
+        <key>green-dragon-slash-05.png</key>
+        <dict>
+            <key>frame</key><string>{{418,627},{418,627}}</string>
+            <key>offset</key><string>{0,0}</string>
+            <key>rotated</key><false/>
+            <key>sourceColorRect</key><string>{{0,0},{418,627}}</string>
+            <key>sourceSize</key><string>{418,627}</string>
+        </dict>
+        <key>green-dragon-slash-06.png</key>
+        <dict>
+            <key>frame</key><string>{{836,627},{418,627}}</string>
+            <key>offset</key><string>{0,0}</string>
+            <key>rotated</key><false/>
+            <key>sourceColorRect</key><string>{{0,0},{418,627}}</string>
+            <key>sourceSize</key><string>{418,627}</string>
+        </dict>
+    </dict>
+    <key>metadata</key>
+    <dict>
+        <key>format</key><integer>2</integer>
+        <key>realTextureFileName</key><string>green-dragon-slash-atlas.png</string>
+        <key>size</key><string>{1254,1254}</string>
+        <key>smartupdate</key><string>ShuRaid2D native Green Dragon Slash SpriteAtlas</string>
+        <key>textureFileName</key><string>green-dragon-slash-atlas.png</string>
+    </dict>
+</dict>
+</plist>

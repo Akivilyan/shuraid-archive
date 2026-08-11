@@ -37,3 +37,12 @@
 - 已新增 `assets/scripts/gameplay/BattleSlice.ts`，负责现阶段的移动、朝向、厨师长追击、接触反馈、青龙斩判定、减速刷新、击杀和复用重生；
 - 青龙斩保持设计值：间隔 0.6 秒、半径 112、半角 0.48 弧度，按最后移动朝向攻击，不自动锁定敌人；
 - 微信小游戏 Release 构建成功，退出码 36；未执行真机验收、上传或发布。
+
+## 2026-08-11：首轮战斗反馈修正
+
+- 关羽普攻 AnimationClip 改为“待机 → 蓄力 → 待机”，不再播放横向占幅过大的挥刀帧；原图未修改；
+- 新增 `assets/art/effects/green-dragon-slash/green-dragon-slash-atlas.png` 与 `.plist`，由 Cocos 导入为 6 个 SpriteFrame；
+- 新增 `green-dragon-slash.anim` 和 `GreenDragonSlash.prefab`，场景 `SlashVisual` 使用 Sprite + Animation 播放序列帧，脚本不再用 Graphics 生成刀光；
+- 青龙斩仍按最后移动朝向判定，不自动锁敌；显示节点可整体缩放，判定半径仍为 112；
+- 玩家与厨师长增加 72 逻辑像素的圆形实体分离；每次命中即时刷新敌人血条和 HUD HP；
+- 微信小游戏 Release 自动构建成功，Cocos 官方退出码 36；未执行真机验收、上传或发布。

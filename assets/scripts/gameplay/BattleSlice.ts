@@ -22,6 +22,7 @@ export class BattleSlice extends Component {
     private readonly moveTarget = new Vec3();
     private readonly lastDirection = new Vec2(1, 0);
     private readonly scratchPosition = new Vec3();
+    private readonly scratchEnemyPosition = new Vec3();
     private readonly touchPosition = new Vec3();
 
     private player!: Node;
@@ -31,6 +32,9 @@ export class BattleSlice extends Component {
     private enemyVisual!: Node;
     private enemySprite!: Sprite;
     private slashVisual!: Node;
+    private slashAnimation!: Animation;
+    private enemyHealthBar!: Node;
+    private enemyHealthGraphics!: Graphics;
     private scoreLabel!: Label;
     private canvasTransform!: UITransform;
 
@@ -49,6 +53,10 @@ export class BattleSlice extends Component {
     private readonly attackCooldown = 0.6;
     private readonly attackRadius = 112;
     private readonly attackHalfAngle = 0.48;
+    private readonly separationDistance = 72;
+    private readonly maxEnemyHealth = 3;
+    private readonly slashVisualScale = 0.42;
+    private readonly slashVisualOffset = 54;
 
     protected onLoad(): void {
         this.canvasTransform = this.node.getComponent(UITransform)!;
@@ -59,18 +67,22 @@ export class BattleSlice extends Component {
         this.enemyVisual = this.requireChild(this.enemy, 'Visual');
         this.enemySprite = this.enemyVisual.getComponent(Sprite)!;
         this.slashVisual = this.requireChild(this.node, 'SlashVisual');
+        this.slashAnimation = this.slashVisual.getComponent(Animation)!;
+        this.enemyHealthBar = this.requireChild(this.node, 'EnemyHealthBar');
+        this.enemyHealthGraphics = this.enemyHealthBar.getComponent(Graphics)
+            ?? this.enemyHealthBar.addComponent(Graphics);
 
         const scoreNode = this.requireChild(this.node, 'Score');
         const scoreTransform = scoreNode.getComponent(UITransform) ?? scoreNode.addComponent(UITransform);
-        scoreTransform.setContentSize(560, 54);
+        scoreTransform.setContentSize(860, 60);
         this.scoreLabel = scoreNode.getComponent(Label) ?? scoreNode.addComponent(Label);
-        this.scoreLabel.fontSize = 28;
-        this.scoreLabel.lineHeight = 36;
+        this.scoreLabel.fontSize = 38;
+        this.scoreLabel.lineHeight = 46;
         this.scoreLabel.color = new Color(255, 238, 196, 255);
 
         this.moveTarget.set(this.player.position);
         this.drawArena();
-        this.drawSlash();
+        this.drawEnemyHealthBar();
         this.updateHud();
         this.playMovement('guan-idle');
 
@@ -96,6 +108,8 @@ export class BattleSlice extends Component {
 
         this.updatePlayer(dt);
         this.updateEnemy(dt);
+        this.resolveEntityCollision();
+        this.updateEnemyHealthBarPosition();
 
         if (this.attackTimer <= 0) {
             this.attackTimer += this.attackCooldown;
@@ -170,10 +184,10 @@ export class BattleSlice extends Component {
         const dy = playerPosition.y - enemyPosition.y;
         const distance = Math.hypot(dx, dy);
 
-        if (distance > 48) {
+        if (distance > this.separationDistance) {
             const inverseDistance = 1 / distance;
             const speed = this.enemySlowTimer > 0 ? Math.max(18, this.enemySpeed - 12) : this.enemySpeed;
-            const step = Math.min(distance - 48, speed * dt);
+            const step = Math.min(distance - this.separationDistance, speed * dt);
             const directionX = dx * inverseDistance;
             const directionY = dy * inverseDistance;
             this.enemy.setPosition(
@@ -186,18 +200,49 @@ export class BattleSlice extends Component {
             this.contactTimer = 1.05;
             this.playMovement('guan-hurt', true);
             this.attackLock = Math.max(this.attackLock, 0.25);
-            if (distance > 0.001) {
-                const push = 22 / distance;
-                this.scratchPosition.set(
-                    playerPosition.x + dx * push,
-                    playerPosition.y + dy * push,
-                    0,
-                );
-                this.clampToArena(this.scratchPosition, 44);
-                this.player.setPosition(this.scratchPosition);
-                this.moveTarget.set(this.scratchPosition);
-            }
         }
+    }
+
+    private resolveEntityCollision(): void {
+        if (!this.enemy.active) {
+            return;
+        }
+
+        const playerPosition = this.player.position;
+        const enemyPosition = this.enemy.position;
+        let dx = enemyPosition.x - playerPosition.x;
+        let dy = enemyPosition.y - playerPosition.y;
+        let distance = Math.hypot(dx, dy);
+        if (distance >= this.separationDistance) {
+            return;
+        }
+
+        if (distance < 0.001) {
+            dx = this.lastDirection.x;
+            dy = this.lastDirection.y;
+            distance = 1;
+        }
+
+        const inverseDistance = 1 / distance;
+        const directionX = dx * inverseDistance;
+        const directionY = dy * inverseDistance;
+        const overlap = this.separationDistance - distance;
+
+        this.scratchPosition.set(
+            playerPosition.x - directionX * overlap * 0.55,
+            playerPosition.y - directionY * overlap * 0.55,
+            0,
+        );
+        this.clampToArena(this.scratchPosition, 44);
+        this.player.setPosition(this.scratchPosition);
+
+        this.scratchEnemyPosition.set(
+            enemyPosition.x + directionX * overlap * 0.45,
+            enemyPosition.y + directionY * overlap * 0.45,
+            0,
+        );
+        this.clampToArena(this.scratchEnemyPosition, 44);
+        this.enemy.setPosition(this.scratchEnemyPosition);
     }
 
     private performAttack(): void {
@@ -210,10 +255,8 @@ export class BattleSlice extends Component {
             return;
         }
 
-        const playerPosition = this.player.position;
-        const enemyPosition = this.enemy.position;
-        const dx = enemyPosition.x - playerPosition.x;
-        const dy = enemyPosition.y - playerPosition.y;
+        const dx = this.enemy.position.x - this.player.position.x;
+        const dy = this.enemy.position.y - this.player.position.y;
         const distance = Math.hypot(dx, dy);
         if (distance > this.attackRadius || distance < 0.001) {
             return;
@@ -228,41 +271,50 @@ export class BattleSlice extends Component {
 
         this.enemyHealth -= 1;
         this.enemySlowTimer = 2;
-        this.enemySprite.color = new Color(255, 120, 92, 255);
+        this.enemySprite.color = new Color(255, 105, 78, 255);
         this.scheduleOnce(() => {
             if (this.enemySprite.isValid) {
                 this.enemySprite.color = new Color(255, 255, 255, 255);
             }
-        }, 0.1);
+        }, 0.12);
 
-        this.enemy.setPosition(
-            enemyPosition.x + dx * inverseDistance * 18,
-            enemyPosition.y + dy * inverseDistance * 18,
+        this.scratchEnemyPosition.set(
+            this.enemy.position.x + dx * inverseDistance * 18,
+            this.enemy.position.y + dy * inverseDistance * 18,
             0,
         );
+        this.clampToArena(this.scratchEnemyPosition, 44);
+        this.enemy.setPosition(this.scratchEnemyPosition);
 
         if (this.enemyHealth <= 0) {
             this.enemy.active = false;
             this.respawnTimer = 0.55;
             this.kills += 1;
-            this.updateHud();
         }
+
+        this.drawEnemyHealthBar();
+        this.updateHud();
     }
 
     private showSlash(): void {
         this.slashVisual.active = true;
-        this.slashVisual.setPosition(this.player.position);
+        this.slashVisual.setPosition(
+            this.player.position.x + this.lastDirection.x * this.slashVisualOffset,
+            this.player.position.y + this.lastDirection.y * this.slashVisualOffset,
+            0,
+        );
         this.slashVisual.setRotationFromEuler(
             0,
             0,
             Math.atan2(this.lastDirection.y, this.lastDirection.x) * 180 / Math.PI,
         );
-        this.slashVisual.setScale(1, 1, 1);
+        this.slashVisual.setScale(this.slashVisualScale, this.slashVisualScale, 1);
+        this.slashAnimation.play('green-dragon-slash');
         this.scheduleOnce(() => {
             if (this.slashVisual.isValid) {
                 this.slashVisual.active = false;
             }
-        }, 0.16);
+        }, 0.25);
     }
 
     private respawnEnemy(): void {
@@ -277,28 +329,38 @@ export class BattleSlice extends Component {
             new Vec3(-halfWidth * 0.55, halfHeight, 0),
         ];
         this.enemy.setPosition(positions[edge]);
-        this.enemyHealth = 3;
+        this.enemyHealth = this.maxEnemyHealth;
         this.enemySlowTimer = 0;
         this.enemySprite.color = new Color(255, 255, 255, 255);
         this.enemy.active = true;
+        this.drawEnemyHealthBar();
+        this.updateHud();
     }
 
-    private drawSlash(): void {
-        const graphics = this.slashVisual.getComponent(Graphics) ?? this.slashVisual.addComponent(Graphics);
-        graphics.clear();
-        graphics.fillColor = new Color(255, 188, 48, 118);
-        graphics.strokeColor = new Color(255, 232, 140, 230);
-        graphics.lineWidth = 8;
-        graphics.moveTo(0, 0);
-        graphics.lineTo(
-            Math.cos(-this.attackHalfAngle) * this.attackRadius,
-            Math.sin(-this.attackHalfAngle) * this.attackRadius,
-        );
-        graphics.arc(0, 0, this.attackRadius, -this.attackHalfAngle, this.attackHalfAngle, false);
-        graphics.close();
-        graphics.fill();
-        graphics.stroke();
-        this.slashVisual.active = false;
+    private drawEnemyHealthBar(): void {
+        this.enemyHealthBar.active = this.enemy.active;
+        if (!this.enemy.active) {
+            return;
+        }
+
+        const width = 92;
+        const height = 12;
+        const ratio = Math.max(0, this.enemyHealth / this.maxEnemyHealth);
+        this.enemyHealthGraphics.clear();
+        this.enemyHealthGraphics.fillColor = new Color(37, 24, 20, 230);
+        this.enemyHealthGraphics.rect(-width * 0.5 - 3, -height * 0.5 - 3, width + 6, height + 6);
+        this.enemyHealthGraphics.fill();
+        this.enemyHealthGraphics.fillColor = new Color(206, 62, 47, 255);
+        this.enemyHealthGraphics.rect(-width * 0.5, -height * 0.5, width * ratio, height);
+        this.enemyHealthGraphics.fill();
+        this.updateEnemyHealthBarPosition();
+    }
+
+    private updateEnemyHealthBarPosition(): void {
+        this.enemyHealthBar.active = this.enemy.active;
+        if (this.enemy.active) {
+            this.enemyHealthBar.setPosition(this.enemy.position.x, this.enemy.position.y + 104, 0);
+        }
     }
 
     private drawArena(): void {
@@ -325,9 +387,12 @@ export class BattleSlice extends Component {
     }
 
     private updateHud(): void {
-        this.scoreLabel.string = `击破 ${this.kills}    指尖移动 · 青龙斩自动挥击`;
+        const enemyStatus = this.enemy.active
+            ? `厨师长 HP ${this.enemyHealth}/${this.maxEnemyHealth}`
+            : '厨师长 已击破';
+        this.scoreLabel.string = `击破 ${this.kills}    ${enemyStatus}    指尖移动 · 青龙斩自动挥出`;
         const size = this.canvasTransform.contentSize;
-        this.scoreLabel.node.setPosition(-size.width * 0.5 + 300, size.height * 0.5 - 48, 0);
+        this.scoreLabel.node.setPosition(0, size.height * 0.5 - 52, 0);
     }
 
     private playMovement(name: string, force = false): void {

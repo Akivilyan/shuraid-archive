@@ -99,6 +99,8 @@ export class BattlePresenter {
   private readonly slashInnerColor = new Color(255, 239, 166, 235);
 
   private lastAttackSerial = 0;
+  private lastSlashRange = Number.NaN;
+  private lastSlashHalfAngle = Number.NaN;
   private attackTime = 0;
   private visualFacingSign = 1;
   private currentPlayerAnimation = '';
@@ -271,6 +273,12 @@ export class BattlePresenter {
   }
 
   private drawSlashEffect(range: number, halfAngle: number): void {
+    if (range === this.lastSlashRange && halfAngle === this.lastSlashHalfAngle) {
+      return;
+    }
+    this.lastSlashRange = range;
+    this.lastSlashHalfAngle = halfAngle;
+
     const radius = Math.max(12, range);
     this.drawCrescent(
       this.slashOuter,

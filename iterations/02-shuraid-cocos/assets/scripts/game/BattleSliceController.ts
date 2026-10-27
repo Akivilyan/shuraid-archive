@@ -11,6 +11,7 @@ import {
   Vec2,
   view,
 } from 'cc';
+import { DEBUG } from 'cc/env';
 
 import { CHEF_POOL_CAPACITY } from '../core/BattleConfig';
 import { BattleWorld } from '../core/BattleWorld';
@@ -76,29 +77,37 @@ export class BattleSliceController extends Component {
       this.chefAtlas,
     );
 
-    let hudTransform = this.hudNode.getComponent(UITransform);
-    if (hudTransform === null) {
-      hudTransform = this.hudNode.addComponent(UITransform);
+    if (DEBUG) {
+      this.initializePerformanceHud(this.hudNode);
+    } else {
+      this.hudNode.active = false;
     }
-    hudTransform.setContentSize(360, 72);
-    hudTransform.setAnchorPoint(0, 1);
-    let label = this.hudNode.getComponent(Label);
-    if (label === null) {
-      label = this.hudNode.addComponent(Label);
-    }
-    label.fontSize = 16;
-    label.lineHeight = 19;
-    label.color = new Color(76, 52, 30, 235);
-    label.horizontalAlign = Label.HorizontalAlign.LEFT;
-    label.verticalAlign = Label.VerticalAlign.TOP;
-    label.string = 'FPS --  Frame --\nDraw --  Nodes --\nChef Pool --';
-    this.performanceHud = new PerformanceHud(label, this.node.scene, CHEF_POOL_CAPACITY);
 
     this.lifecycle = new PlatformLifecycle(
       this.handlePlatformHide,
       this.handlePlatformShow,
     );
     this.lifecycle.start();
+  }
+
+  private initializePerformanceHud(hudNode: Node): void {
+    let hudTransform = hudNode.getComponent(UITransform);
+    if (hudTransform === null) {
+      hudTransform = hudNode.addComponent(UITransform);
+    }
+    hudTransform.setContentSize(360, 72);
+    hudTransform.setAnchorPoint(0, 1);
+    let label = hudNode.getComponent(Label);
+    if (label === null) {
+      label = hudNode.addComponent(Label);
+    }
+    label.fontSize = 16;
+    label.lineHeight = 19;
+    label.color = new Color(76, 52, 30, 235);
+    label.horizontalAlign = Label.HorizontalAlign.LEFT;
+    label.verticalAlign = Label.VerticalAlign.TOP;
+    label.string = 'FPS --  Avg --  P95 --\nMax --  Draw --  Nodes --\nChef Pool --';
+    this.performanceHud = new PerformanceHud(label, this.node.scene, CHEF_POOL_CAPACITY);
   }
 
   protected onEnable(): void {
@@ -126,7 +135,9 @@ export class BattleSliceController extends Component {
     const alpha = this.runner.advance(deltaTime);
     const snapshot = this.world.getSnapshot();
     this.presenter?.sync(snapshot, alpha, deltaTime);
-    this.performanceHud?.update(deltaTime, snapshot.activeEnemyCount);
+    if (DEBUG) {
+      this.performanceHud?.update(deltaTime, snapshot.activeEnemyCount);
+    }
   }
 
   private readonly handlePlatformHide = (): void => {

@@ -1,6 +1,6 @@
 # 第一切片验证记录
 
-更新日期：2026-08-10
+更新日期：2026-08-11
 
 ## 自动验证
 
@@ -10,9 +10,18 @@
 | `npm run check:core` | 通过 | 纯 TypeScript 规则层严格检查 |
 | Cocos TypeScript `tsc -p tsconfig.json --noEmit` | 通过 | 使用 Cocos Creator 3.8.8 自带 TypeScript |
 | Cocos 移动 Web 构建 | 通过 | `platform=web-mobile`，Debug |
-| `npm run build:cocos:wechat` | 通过 | `platform=wechatgame`，Debug；生成 AppID 已读回为 `wxc99662ee0bfded03`；未上传 |
+| `npm run build:cocos:wechat` | 通过 | `platform=wechatgame`，Debug；AppID、`debug=true`、390×844/FIXED_HEIGHT 已读回；未上传 |
+| `npm run build:cocos:wechat:release` | 通过 | `platform=wechatgame`，Release；AppID、`debug=false`、390×844/FIXED_HEIGHT 已读回；未上传 |
 | 移动 Web 运行日志 | 场景加载成功 | 无脚本错误；仅模板缺少 `favicon.ico` 的无关 404 |
 | 引擎裁剪 | 通过 | 保留普攻所需 `animation`、`graphics`、`tween`；未打包 Bullet、Box2D、Spine、音频等未使用模块 |
+
+## Release 性能对照（2026-08-11）
+
+- Debug 与 Release 使用独立配置和输出目录，避免覆盖对照包；Debug 引擎包 `cc.js` 为 3,680,203 字节，Release 为 1,468,199 字节；
+- 两种构建初始化设置均为 390×844/FIXED_HEIGHT，不再先用 1280×720 初始化后由脚本覆盖；运行时仍保留同值设置作为场景防御性约束；
+- Debug HUD 的采样间隔从 0.5 秒改为 1 秒，并使用一次性分配的固定直方图显示 Avg/P95/Max，不在逐帧路径分配数组；Release 不初始化或更新 HUD；
+- 青龙斩仍使用与真实判定范围一致的 Graphics 月牙，但半径和张角不变时复用已经生成的几何；当前固定青龙斩只在首次出招重建，后续每 0.6 秒仅做节点朝向、缩放和透明度 Tween；
+- 本轮真机先测 `build/wechatgame-release` 的连续移动、转向和连续空挥；若只有第一次月牙出现时发生尖峰而后续稳定，再单独处理首次几何预热；若每次攻击仍有尖峰，再进入 Sprite 特效替换，不凭静态推断直接增加新素材。
 
 ## 普攻转向跳帧修正
 
@@ -23,7 +32,7 @@
 - 旧规则层会在普攻发生的单个固定帧把 `player.facing` 改成索敌方向，下一帧移动系统又立即改回移动方向，造成一次左右闪转；现在攻击方向只写入攻击快照，不覆盖移动朝向；
 - 旧表现直接镜像带非居中锚点的角色根节点，翻面会放大画面位移；现在位置根节点保持正向，居中的 `GuanVisual` 子节点单独翻面，并对接近竖直方向设置朝向死区；
 - 普攻改为 Cocos `AnimationClip` 播放图集中的蓄力/横扫帧；移动动画由 4 FPS 提升至 8 FPS；
-- 独立长柄刀节点及场景引用已移除，改为真实半径和张角驱动的青绿金色弧光，弧光只在攻击事件触发时重绘一次，再由 Tween 扩散淡出；
+- 独立长柄刀节点及场景引用已移除，改为真实半径和张角驱动的青绿金色弧光；初版在每次攻击事件重绘，2026-08-11 起相同参数直接复用几何，再由 Tween 扩散淡出；
 - 修正后已重新通过 6/6 测试、完整 Cocos TypeScript 严格检查和微信小游戏构建；尚待真机复测视觉手感。
 
 ### 微信运行时模块修复
@@ -53,7 +62,8 @@ Web 横屏烟测曾记录约 60 FPS、16.66 ms、5 Draw Call、16 个活动节�
 ## 人工验收（待完成）
 
 - [ ] 使用 Cocos Creator 3.8.8 打开 `assets/scenes/BattleSlice.scene`，确认无脚本编译错误；
-- [ ] 使用微信开发者工具打开 `build/wechatgame`，确认无持续错误或重置循环；
+- [ ] 使用微信开发者工具打开 Debug 包 `build/wechatgame`，确认 HUD 每秒更新 Avg/P95/Max，且无持续错误或重置循环；
+- [ ] 使用微信开发者工具打开 Release 包 `build/wechatgame-release`，确认 HUD 不显示、场景正常运行，并以该包作为真机手感结论；
 - [ ] 真机单指拖动连续移动，松手立即停止；
 - [ ] 连续小角度改变拖动方向，关羽移动和非攻击转向无肉眼明显卡顿；
 - [ ] 普攻蓄力/横扫帧连续，从左转右或从右转左时不再出现单帧闪转；

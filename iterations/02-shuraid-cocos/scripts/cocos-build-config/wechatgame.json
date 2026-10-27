@@ -12,6 +12,13 @@
     }
   ],
   "debug": true,
+  "designResolution": {
+    "width": 390,
+    "height": 844,
+    "fitWidth": false,
+    "fitHeight": true,
+    "policy": 3
+  },
   "replaceSplashScreen": false,
   "md5Cache": false,
   "mainBundleCompressionType": "merge_all_json",
@@ -25,4 +32,3 @@
     }
   }
 }
-

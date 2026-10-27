@@ -1,0 +1,7 @@
+node_modules/
+build/
+library/
+temp/
+local/
+output/
+.DS_Store

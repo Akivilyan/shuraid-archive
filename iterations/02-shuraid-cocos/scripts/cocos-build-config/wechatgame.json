@@ -1,0 +1,28 @@
+{
+  "taskName": "shu-raid-wechatgame",
+  "name": "shu-raid",
+  "platform": "wechatgame",
+  "buildPath": "project://build",
+  "outputName": "wechatgame",
+  "startScene": "d8c8bc43-14df-4332-9b9f-3599a7bfdee7",
+  "scenes": [
+    {
+      "url": "db://assets/scenes/BattleSlice.scene",
+      "uuid": "d8c8bc43-14df-4332-9b9f-3599a7bfdee7"
+    }
+  ],
+  "debug": true,
+  "replaceSplashScreen": false,
+  "md5Cache": false,
+  "mainBundleCompressionType": "merge_all_json",
+  "mainBundleIsRemote": false,
+  "packages": {
+    "wechatgame": {
+      "appid": "wxc99662ee0bfded03",
+      "orientation": "portrait",
+      "separateEngine": false,
+      "highPerformanceMode": true
+    }
+  }
+}
+

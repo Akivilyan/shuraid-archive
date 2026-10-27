@@ -1,0 +1,16 @@
+{
+  "name": "shu-raid",
+  "uuid": "64c75e74-76d5-46f4-a187-1b73343d9bc0",
+  "version": "0.1.0",
+  "private": true,
+  "description": "A clean Cocos Creator rebuild of 报，蜀军来劫粮.",
+  "scripts": {
+    "test": "node scripts/run-core-tests.cjs",
+    "check:core": "node scripts/check-core.cjs",
+    "preview:web": "node scripts/serve-build.cjs build/web-desktop 4174",
+    "build:cocos:wechat": "powershell -NoProfile -ExecutionPolicy Bypass -File scripts/build-cocos-wechat.ps1"
+  },
+  "creator": {
+    "version": "3.8.8"
+  }
+}

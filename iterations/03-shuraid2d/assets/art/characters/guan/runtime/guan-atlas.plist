@@ -1,0 +1,65 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+    <key>frames</key>
+    <dict>
+        <key>guan-idle.png</key>
+        <dict>
+            <key>frame</key><string>{{0,0},{384,288}}</string>
+            <key>offset</key><string>{0,0}</string>
+            <key>rotated</key><false/>
+            <key>sourceColorRect</key><string>{{0,0},{384,288}}</string>
+            <key>sourceSize</key><string>{384,288}</string>
+        </dict>
+        <key>guan-move-a.png</key>
+        <dict>
+            <key>frame</key><string>{{384,0},{384,288}}</string>
+            <key>offset</key><string>{0,0}</string>
+            <key>rotated</key><false/>
+            <key>sourceColorRect</key><string>{{0,0},{384,288}}</string>
+            <key>sourceSize</key><string>{384,288}</string>
+        </dict>
+        <key>guan-move-b.png</key>
+        <dict>
+            <key>frame</key><string>{{768,0},{384,288}}</string>
+            <key>offset</key><string>{0,0}</string>
+            <key>rotated</key><false/>
+            <key>sourceColorRect</key><string>{{0,0},{384,288}}</string>
+            <key>sourceSize</key><string>{384,288}</string>
+        </dict>
+        <key>guan-attack-windup.png</key>
+        <dict>
+            <key>frame</key><string>{{1152,0},{384,288}}</string>
+            <key>offset</key><string>{0,0}</string>
+            <key>rotated</key><false/>
+            <key>sourceColorRect</key><string>{{0,0},{384,288}}</string>
+            <key>sourceSize</key><string>{384,288}</string>
+        </dict>
+        <key>guan-attack-sweep.png</key>
+        <dict>
+            <key>frame</key><string>{{1536,0},{384,288}}</string>
+            <key>offset</key><string>{0,0}</string>
+            <key>rotated</key><false/>
+            <key>sourceColorRect</key><string>{{0,0},{384,288}}</string>
+            <key>sourceSize</key><string>{384,288}</string>
+        </dict>
+        <key>guan-hurt.png</key>
+        <dict>
+            <key>frame</key><string>{{1920,0},{384,288}}</string>
+            <key>offset</key><string>{0,0}</string>
+            <key>rotated</key><false/>
+            <key>sourceColorRect</key><string>{{0,0},{384,288}}</string>
+            <key>sourceSize</key><string>{384,288}</string>
+        </dict>
+    </dict>
+    <key>metadata</key>
+    <dict>
+        <key>format</key><integer>2</integer>
+        <key>realTextureFileName</key><string>guan-atlas.png</string>
+        <key>size</key><string>{2304,288}</string>
+        <key>smartupdate</key><string>ShuRaid2D native SpriteAtlas</string>
+        <key>textureFileName</key><string>guan-atlas.png</string>
+    </dict>
+</dict>
+</plist>

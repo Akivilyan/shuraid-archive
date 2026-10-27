@@ -1,0 +1,293 @@
+{
+  "ver": "1.0.8",
+  "importer": "sprite-atlas",
+  "imported": true,
+  "uuid": "b2c79818-2fe8-4c9a-b629-e7f02f26a3b2",
+  "files": [
+    ".json"
+  ],
+  "subMetas": {
+    "4cce5": {
+      "importer": "sprite-frame",
+      "uuid": "b2c79818-2fe8-4c9a-b629-e7f02f26a3b2@4cce5",
+      "displayName": "",
+      "id": "4cce5",
+      "name": "head-cook-idle",
+      "userData": {
+        "trimType": "auto",
+        "trimThreshold": 1,
+        "rotated": false,
+        "offsetX": 0,
+        "offsetY": 0,
+        "trimX": 0,
+        "trimY": 0,
+        "width": 288,
+        "height": 288,
+        "rawWidth": 288,
+        "rawHeight": 288,
+        "borderTop": 0,
+        "borderBottom": 0,
+        "borderLeft": 0,
+        "borderRight": 0,
+        "packable": true,
+        "pixelsToUnit": 100,
+        "pivotX": 0.5,
+        "pivotY": 0.5,
+        "meshType": 0,
+        "vertices": {
+          "rawPosition": [],
+          "indexes": [],
+          "uv": [],
+          "nuv": [],
+          "minPos": [],
+          "maxPos": []
+        },
+        "isUuid": true,
+        "imageUuidOrDatabaseUri": "3174c9ab-adde-4220-ba7d-8a52afbe4c06@6c48a",
+        "atlasUuid": "b2c79818-2fe8-4c9a-b629-e7f02f26a3b2"
+      },
+      "ver": "1.0.12",
+      "imported": true,
+      "files": [
+        ".json"
+      ],
+      "subMetas": {}
+    },
+    "c606e": {
+      "importer": "sprite-frame",
+      "uuid": "b2c79818-2fe8-4c9a-b629-e7f02f26a3b2@c606e",
+      "displayName": "",
+      "id": "c606e",
+      "name": "head-cook-move-a",
+      "userData": {
+        "trimThreshold": 1,
+        "rotated": false,
+        "offsetX": 0,
+        "offsetY": 0,
+        "trimX": 288,
+        "trimY": 0,
+        "width": 288,
+        "height": 288,
+        "rawWidth": 288,
+        "rawHeight": 288,
+        "borderTop": 0,
+        "borderBottom": 0,
+        "borderLeft": 0,
+        "borderRight": 0,
+        "packable": true,
+        "pixelsToUnit": 100,
+        "pivotX": 0.5,
+        "pivotY": 0.5,
+        "meshType": 0,
+        "vertices": {
+          "rawPosition": [],
+          "indexes": [],
+          "uv": [],
+          "nuv": [],
+          "minPos": [],
+          "maxPos": []
+        },
+        "isUuid": true,
+        "imageUuidOrDatabaseUri": "3174c9ab-adde-4220-ba7d-8a52afbe4c06@6c48a",
+        "atlasUuid": "b2c79818-2fe8-4c9a-b629-e7f02f26a3b2",
+        "trimType": "auto"
+      },
+      "ver": "1.0.12",
+      "imported": true,
+      "files": [
+        ".json"
+      ],
+      "subMetas": {}
+    },
+    "c54f0": {
+      "importer": "sprite-frame",
+      "uuid": "b2c79818-2fe8-4c9a-b629-e7f02f26a3b2@c54f0",
+      "displayName": "",
+      "id": "c54f0",
+      "name": "head-cook-move-b",
+      "userData": {
+        "trimThreshold": 1,
+        "rotated": false,
+        "offsetX": 0,
+        "offsetY": 0,
+        "trimX": 576,
+        "trimY": 0,
+        "width": 288,
+        "height": 288,
+        "rawWidth": 288,
+        "rawHeight": 288,
+        "borderTop": 0,
+        "borderBottom": 0,
+        "borderLeft": 0,
+        "borderRight": 0,
+        "packable": true,
+        "pixelsToUnit": 100,
+        "pivotX": 0.5,
+        "pivotY": 0.5,
+        "meshType": 0,
+        "vertices": {
+          "rawPosition": [],
+          "indexes": [],
+          "uv": [],
+          "nuv": [],
+          "minPos": [],
+          "maxPos": []
+        },
+        "isUuid": true,
+        "imageUuidOrDatabaseUri": "3174c9ab-adde-4220-ba7d-8a52afbe4c06@6c48a",
+        "atlasUuid": "b2c79818-2fe8-4c9a-b629-e7f02f26a3b2",
+        "trimType": "auto"
+      },
+      "ver": "1.0.12",
+      "imported": true,
+      "files": [
+        ".json"
+      ],
+      "subMetas": {}
+    },
+    "1b403": {
+      "importer": "sprite-frame",
+      "uuid": "b2c79818-2fe8-4c9a-b629-e7f02f26a3b2@1b403",
+      "displayName": "",
+      "id": "1b403",
+      "name": "head-cook-attack-a",
+      "userData": {
+        "trimThreshold": 1,
+        "rotated": false,
+        "offsetX": 0,
+        "offsetY": 0,
+        "trimX": 864,
+        "trimY": 0,
+        "width": 288,
+        "height": 288,
+        "rawWidth": 288,
+        "rawHeight": 288,
+        "borderTop": 0,
+        "borderBottom": 0,
+        "borderLeft": 0,
+        "borderRight": 0,
+        "packable": true,
+        "pixelsToUnit": 100,
+        "pivotX": 0.5,
+        "pivotY": 0.5,
+        "meshType": 0,
+        "vertices": {
+          "rawPosition": [],
+          "indexes": [],
+          "uv": [],
+          "nuv": [],
+          "minPos": [],
+          "maxPos": []
+        },
+        "isUuid": true,
+        "imageUuidOrDatabaseUri": "3174c9ab-adde-4220-ba7d-8a52afbe4c06@6c48a",
+        "atlasUuid": "b2c79818-2fe8-4c9a-b629-e7f02f26a3b2",
+        "trimType": "auto"
+      },
+      "ver": "1.0.12",
+      "imported": true,
+      "files": [
+        ".json"
+      ],
+      "subMetas": {}
+    },
+    "9eaa1": {
+      "importer": "sprite-frame",
+      "uuid": "b2c79818-2fe8-4c9a-b629-e7f02f26a3b2@9eaa1",
+      "displayName": "",
+      "id": "9eaa1",
+      "name": "head-cook-attack-b",
+      "userData": {
+        "trimThreshold": 1,
+        "rotated": false,
+        "offsetX": 0,
+        "offsetY": 0,
+        "trimX": 1152,
+        "trimY": 0,
+        "width": 288,
+        "height": 288,
+        "rawWidth": 288,
+        "rawHeight": 288,
+        "borderTop": 0,
+        "borderBottom": 0,
+        "borderLeft": 0,
+        "borderRight": 0,
+        "packable": true,
+        "pixelsToUnit": 100,
+        "pivotX": 0.5,
+        "pivotY": 0.5,
+        "meshType": 0,
+        "vertices": {
+          "rawPosition": [],
+          "indexes": [],
+          "uv": [],
+          "nuv": [],
+          "minPos": [],
+          "maxPos": []
+        },
+        "isUuid": true,
+        "imageUuidOrDatabaseUri": "3174c9ab-adde-4220-ba7d-8a52afbe4c06@6c48a",
+        "atlasUuid": "b2c79818-2fe8-4c9a-b629-e7f02f26a3b2",
+        "trimType": "auto"
+      },
+      "ver": "1.0.12",
+      "imported": true,
+      "files": [
+        ".json"
+      ],
+      "subMetas": {}
+    },
+    "d9bb0": {
+      "importer": "sprite-frame",
+      "uuid": "b2c79818-2fe8-4c9a-b629-e7f02f26a3b2@d9bb0",
+      "displayName": "",
+      "id": "d9bb0",
+      "name": "head-cook-hurt",
+      "userData": {
+        "trimThreshold": 1,
+        "rotated": false,
+        "offsetX": 0,
+        "offsetY": 0,
+        "trimX": 1440,
+        "trimY": 0,
+        "width": 288,
+        "height": 288,
+        "rawWidth": 288,
+        "rawHeight": 288,
+        "borderTop": 0,
+        "borderBottom": 0,
+        "borderLeft": 0,
+        "borderRight": 0,
+        "packable": true,
+        "pixelsToUnit": 100,
+        "pivotX": 0.5,
+        "pivotY": 0.5,
+        "meshType": 0,
+        "vertices": {
+          "rawPosition": [],
+          "indexes": [],
+          "uv": [],
+          "nuv": [],
+          "minPos": [],
+          "maxPos": []
+        },
+        "isUuid": true,
+        "imageUuidOrDatabaseUri": "3174c9ab-adde-4220-ba7d-8a52afbe4c06@6c48a",
+        "atlasUuid": "b2c79818-2fe8-4c9a-b629-e7f02f26a3b2",
+        "trimType": "auto"
+      },
+      "ver": "1.0.12",
+      "imported": true,
+      "files": [
+        ".json"
+      ],
+      "subMetas": {}
+    }
+  },
+  "userData": {
+    "atlasTextureName": "head-cook-atlas.png",
+    "format": 2,
+    "uuid": "b2c79818-2fe8-4c9a-b629-e7f02f26a3b2",
+    "textureUuid": "3174c9ab-adde-4220-ba7d-8a52afbe4c06@6c48a"
+  }
+}

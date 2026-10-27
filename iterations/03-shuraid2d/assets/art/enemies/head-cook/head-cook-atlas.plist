@@ -1,0 +1,65 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+    <key>frames</key>
+    <dict>
+        <key>head-cook-idle.png</key>
+        <dict>
+            <key>frame</key><string>{{0,0},{288,288}}</string>
+            <key>offset</key><string>{0,0}</string>
+            <key>rotated</key><false/>
+            <key>sourceColorRect</key><string>{{0,0},{288,288}}</string>
+            <key>sourceSize</key><string>{288,288}</string>
+        </dict>
+        <key>head-cook-move-a.png</key>
+        <dict>
+            <key>frame</key><string>{{288,0},{288,288}}</string>
+            <key>offset</key><string>{0,0}</string>
+            <key>rotated</key><false/>
+            <key>sourceColorRect</key><string>{{0,0},{288,288}}</string>
+            <key>sourceSize</key><string>{288,288}</string>
+        </dict>
+        <key>head-cook-move-b.png</key>
+        <dict>
+            <key>frame</key><string>{{576,0},{288,288}}</string>
+            <key>offset</key><string>{0,0}</string>
+            <key>rotated</key><false/>
+            <key>sourceColorRect</key><string>{{0,0},{288,288}}</string>
+            <key>sourceSize</key><string>{288,288}</string>
+        </dict>
+        <key>head-cook-attack-a.png</key>
+        <dict>
+            <key>frame</key><string>{{864,0},{288,288}}</string>
+            <key>offset</key><string>{0,0}</string>
+            <key>rotated</key><false/>
+            <key>sourceColorRect</key><string>{{0,0},{288,288}}</string>
+            <key>sourceSize</key><string>{288,288}</string>
+        </dict>
+        <key>head-cook-attack-b.png</key>
+        <dict>
+            <key>frame</key><string>{{1152,0},{288,288}}</string>
+            <key>offset</key><string>{0,0}</string>
+            <key>rotated</key><false/>
+            <key>sourceColorRect</key><string>{{0,0},{288,288}}</string>
+            <key>sourceSize</key><string>{288,288}</string>
+        </dict>
+        <key>head-cook-hurt.png</key>
+        <dict>
+            <key>frame</key><string>{{1440,0},{288,288}}</string>
+            <key>offset</key><string>{0,0}</string>
+            <key>rotated</key><false/>
+            <key>sourceColorRect</key><string>{{0,0},{288,288}}</string>
+            <key>sourceSize</key><string>{288,288}</string>
+        </dict>
+    </dict>
+    <key>metadata</key>
+    <dict>
+        <key>format</key><integer>2</integer>
+        <key>realTextureFileName</key><string>head-cook-atlas.png</string>
+        <key>size</key><string>{1728,288}</string>
+        <key>smartupdate</key><string>ShuRaid2D native SpriteAtlas</string>
+        <key>textureFileName</key><string>head-cook-atlas.png</string>
+    </dict>
+</dict>
+</plist>

@@ -1,0 +1,31 @@
+{
+  "package_version": 2,
+  "version": "0.1.0",
+  "name": "shuraid-editor-tools",
+  "title": "ShuRaid Editor Tools",
+  "description": "Editor-time generators for ShuRaid native Cocos assets and scene layout.",
+  "author": "ShuRaid",
+  "editor": ">=3.8.0 <3.9.0",
+  "main": "./dist/main.js",
+  "contributions": {
+    "scene": {
+      "script": "./dist/scene.js"
+    },
+    "menu": [
+      {
+        "path": "ShuRaid/Generate GuanYu Stage 1",
+        "label": "Generate GuanYu Stage 1",
+        "message": "generate-guan-yu-stage-1"
+      }
+    ],
+    "messages": {
+      "generate-guan-yu-stage-1": {
+        "public": true,
+        "description": "Generate GuanYu animation clips, prefab, and Bootstrap scene instance.",
+        "methods": [
+          "generateGuanYuStage1"
+        ]
+      }
+    }
+  }
+}

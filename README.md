@@ -4,6 +4,21 @@
 
 不是作品集，是现场。
 
+## 为什么公开
+
+不删、不美颜、不重写。四次尝试的目录、提交、素材，连停手时还没提交的工作区改动，都原样冻在这里。
+
+公开有两个用处：一是我自己回头看，二是给别人当筛子——下次起项目前拿它过一遍，能过再动手（标准在 `POSTMORTEM.md` 最后一节）。
+
+**先说清楚下面这两张图是什么。** 左边是这个项目最好看的部分，右边是它真正死掉的地方。概念图和能落进引擎的动作帧之间有一段落差，5 天 39 次提交都在补这段，没补上。
+
+<table>
+  <tr>
+    <td width="50%"><img src="iterations/02-shuraid-cocos/art-source/accepted/showcases/hero-guan-red-hare-showcase-v4-legs-fixed.png" alt="关羽骑赤兔概念图"><br><sub>概念图 · <code>v4-legs-fixed</code>（文件名本身记着改了几版）</sub></td>
+    <td width="50%"><img src="iterations/02-shuraid-cocos/art-source/accepted/characters/hero-guan-motion-study-v1.png" alt="关羽动作研究六帧"><br><sub>动作研究 · 6 帧。真正要接进引擎的是这一张，不是左边那张</sub></td>
+  </tr>
+</table>
+
 ## 四次尝试
 
 | # | 目录 | 时间 | 提交 | 游戏代码 | 停手状态 |
@@ -13,7 +28,9 @@
 | 03 | `iterations/03-shuraid2d/` | 08-11 02:39 → 23:56 | 17 | 591 行 / 5 文件 | 次日凌晨停手，弃 |
 | 04 | `iterations/04-danke/` | 08-11 16:29，单提交 | 1 | 1,236 行 / 4 文件 | 提交后 55 分钟停手 |
 
-01 是 JS 原型，02 起换成 Cocos Creator 3.8.8 + 微信小游戏目标。
+01 是原生 JS + Canvas 的微信小游戏原型（28 个 js、5,137 行），02 起换成 Cocos Creator 3.8.8 + 微信小游戏目标。
+
+严格说是五次。`01-luanshi-survivor/` 里除了原生原型，还藏着一个 `cocos-client/`：38 个文件，带 `BattleSlice.scene`、`guan-atlas.png` 和一份 `guan-slice.json`。**Cocos 这条路在 08-07 第一天就起过一次头，没走通。** 它不构成一次独立的尝试，但它是后面四次反复停在同一个死点最早的那份证据。
 
 ## 阅读路径
 

@@ -1,0 +1,34 @@
+{
+  "taskName": "danke-survivor-slice-wechat",
+  "name": "danke-survivor-slice",
+  "platform": "wechatgame",
+  "buildPath": "project://build",
+  "outputName": "wechatgame",
+  "startScene": "45ef8a6c-4b69-4fde-a6ec-75f8ee1aa8ac",
+  "scenes": [
+    {
+      "url": "db://assets/scenes/BattleSlice.scene",
+      "uuid": "45ef8a6c-4b69-4fde-a6ec-75f8ee1aa8ac"
+    }
+  ],
+  "debug": true,
+  "designResolution": {
+    "width": 390,
+    "height": 844,
+    "fitWidth": false,
+    "fitHeight": true,
+    "policy": 3
+  },
+  "replaceSplashScreen": false,
+  "md5Cache": false,
+  "mainBundleCompressionType": "merge_all_json",
+  "mainBundleIsRemote": false,
+  "packages": {
+    "wechatgame": {
+      "appid": "touristappid",
+      "orientation": "portrait",
+      "separateEngine": false,
+      "highPerformanceMode": true
+    }
+  }
+}

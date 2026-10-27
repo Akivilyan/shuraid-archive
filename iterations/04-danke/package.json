@@ -1,0 +1,17 @@
+{
+  "name": "danke-survivor-slice",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Cocos Creator 3.8.8 one-hand survivor combat slice",
+  "scripts": {
+    "test": "node --test tests/*.test.ts",
+    "verify": "node scripts/verify-project.mjs",
+    "typecheck": "node C:/ProgramData/cocos/editors/Creator/3.8.8/resources/app.asar.unpacked/node_modules/typescript/bin/tsc --noEmit -p tsconfig.json",
+    "build:wechat": "powershell -NoProfile -ExecutionPolicy Bypass -File scripts/build-cocos-wechat.ps1"
+  },
+  "creator": {
+    "version": "3.8.8"
+  },
+  "uuid": "72c0b3b1-d0f3-4f2e-bd21-168ff7dbe690"
+}

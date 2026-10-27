@@ -1,0 +1,16 @@
+停止开发时的未提交改动清单（从源仓库工作区复制）
+
+  COPY   iterations/02-shuraid-cocos/README.md
+  COPY   iterations/02-shuraid-cocos/assets/scripts/game/BattleSliceController.ts
+  COPY   iterations/02-shuraid-cocos/assets/scripts/presentation/BattlePresenter.ts
+  COPY   iterations/02-shuraid-cocos/assets/scripts/presentation/PerformanceHud.ts
+  COPY   iterations/02-shuraid-cocos/docs/PROJECT-HANDOFF.md
+  COPY   iterations/02-shuraid-cocos/docs/SLICE-01-VALIDATION.md
+  COPY   iterations/02-shuraid-cocos/package.json
+  COPY   iterations/02-shuraid-cocos/scripts/build-cocos-wechat.ps1
+  COPY   iterations/02-shuraid-cocos/scripts/cocos-build-config/wechatgame.json
+  COPY   iterations/02-shuraid-cocos/scripts/cocos-build-config/wechatgame-release.json
+  COPY   iterations/02-shuraid-cocos/settings/v2/packages/cocos-service.json
+  DELETE iterations/03-shuraid2d/assets/art/effects/green-dragon-slash/green-dragon-slash-atlas.png
+  COPY   iterations/03-shuraid2d/assets/scripts/gameplay/BattleController.ts
+  COPY   iterations/03-shuraid2d/assets/scripts/gameplay/GuanYuController.ts

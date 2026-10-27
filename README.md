@@ -23,15 +23,17 @@
 
 ## 历史怎么查
 
-四个版本用 subtree merge 并入，原始提交 sha 都在。路径过滤看不到旧提交（它们的路径没有 `iterations/` 前缀），要直接查根提交：
+四个版本用 subtree merge 并入，原始提交 sha 都在。路径过滤看不到旧提交（它们的路径没有 `iterations/` 前缀），从各版本**最后一个提交**往回查：
 
 ```bash
-git log b675e7f          # 01 的完整历史
-git log 9fb2465          # 02
-git log 9dc40e9          # 03
-git log cf80c17          # 04
-git show <sha>           # 单次改动的完整 diff
+git log 4a3652e     # 01 的完整历史（5 个提交）
+git log c36173b     # 02（6 个）
+git log d623dc8     # 03（17 个）
+git log cf80c17     # 04（1 个）
+git show <sha>      # 单次改动的完整 diff
 ```
+
+纯文本导出在 `_meta/commit-logs/`。
 
 `_meta/uncommitted-changes.txt` 记录了 02 和 03 停手时工作区里还没提交的改动 —— 那些内容只在源仓库的工作区存在过，一次误删就没了，这里做了固化。
 

@@ -1,1 +1,17 @@
+d623dc8 | 2026-08-11 23:56:20 +0800 | REFACTOR-RUNTIME-11: replace god script with node components
+55ed225 | 2026-08-11 23:40:10 +0800 | FIX-MOVEMENT-10: move Guan directly and correct facing
+6f69c63 | 2026-08-11 23:29:15 +0800 | FIX-INPUT-09: coalesce touch movement per frame
+b33be9f | 2026-08-11 23:23:01 +0800 | REFACTOR-COMBAT-08: separate character and skill effects
+b093b47 | 2026-08-11 15:48:16 +0800 | FIX-COMBAT-07: harden contact and slash hitboxes
+cca813d | 2026-08-11 15:43:17 +0800 | FIX-PLAYABLE-06: center Guan and scroll world
+4a5171b | 2026-08-11 15:23:44 +0800 | BUILD-WECHAT-01: trim unused Spine runtime
+ab643d5 | 2026-08-11 15:14:25 +0800 | TUNE-PLAYABLE-05: double Guan display scale
+95ad3c8 | 2026-08-11 15:09:43 +0800 | TUNE-PLAYABLE-04: slow attacks and enlarge Guan
+75bf169 | 2026-08-11 14:48:25 +0800 | FIX-PLAYABLE-03: restore Guan runtime atlas contract
+c55e537 | 2026-08-11 14:19:10 +0800 | TOOLS: add Cocos editor MCP workflow
+329e736 | 2026-08-11 14:02:34 +0800 | DOCS: reset project workflow for agile Cocos development
+92882a0 | 2026-08-11 13:21:25 +0800 | FIX-PLAYABLE-02: smooth movement and reposition slash
+a885da2 | 2026-08-11 12:45:47 +0800 | FIX-PLAYABLE-01: add atlas slash and combat feedback
+5d380a2 | 2026-08-11 12:13:17 +0800 | PLAYABLE-01: add movement enemy and directional slash
+f4c6e42 | 2026-08-11 03:19:06 +0800 | CONTENT-01: add GuanYu native animation assets
 9dc40e9 | 2026-08-11 02:39:35 +0800 | PROJECT-BASELINE: establish clean Cocos WeChat baseline

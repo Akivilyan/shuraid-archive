@@ -1,1 +1,6 @@
+c36173b | 2026-08-10 22:07:44 +0800 | SLICE-01: stabilize melee cadence and unit separation
+8796d5d | 2026-08-10 21:41:08 +0800 | SLICE-01: align Guan Yu slash with player facing
+ef7bee0 | 2026-08-10 20:42:55 +0800 | SLICE-01: restore required Cocos runtime modules
+fccfc0e | 2026-08-10 17:17:16 +0800 | SLICE-01: smooth Guan Yu attack turning
+7addbc6 | 2026-08-10 17:00:45 +0800 | SLICE-01: establish playable Cocos WeChat baseline
 9fb2465 | 2026-08-10 15:19:20 +0800 | PROJECT-RESET: initialize clean Cocos rebuild

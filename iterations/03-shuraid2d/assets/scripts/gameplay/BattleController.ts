@@ -1,6 +1,7 @@
 import {
     _decorator,
     Component,
+    game,
     Label,
 } from 'cc';
 import { GreenDragonSlash } from './GreenDragonSlash';
@@ -8,6 +9,10 @@ import { GuanYuController } from './GuanYuController';
 import { HeadCookController } from './HeadCookController';
 
 const { ccclass, property } = _decorator;
+
+interface WeChatFramePacingApi {
+    setPreferredFramesPerSecond?: (frameRate: number) => void;
+}
 
 @ccclass('BattleController')
 export class BattleController extends Component {
@@ -32,10 +37,19 @@ export class BattleController extends Component {
     private readonly contactCooldown = 1;
 
     protected onLoad(): void {
+        this.configureFramePacing();
         if (!this.player || !this.enemy || !this.slash || !this.scoreLabel) {
             throw new Error('BattleController requires player, enemy, slash and scoreLabel references.');
         }
         this.updateHud();
+    }
+
+    private configureFramePacing(): void {
+        const frameRate = 60;
+        game.frameRate = frameRate;
+
+        const platform = globalThis as typeof globalThis & { wx?: WeChatFramePacingApi };
+        platform.wx?.setPreferredFramesPerSecond?.(frameRate);
     }
 
     protected update(deltaTime: number): void {

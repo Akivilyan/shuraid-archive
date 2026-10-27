@@ -22,6 +22,12 @@ export class GuanYuController extends Component {
     @property
     public joystickDeadZone = 12;
 
+    @property
+    public movementLimitX = 1360;
+
+    @property
+    public movementLimitY = 1140;
+
     public readonly lastDirection = new Vec2(1, 0);
 
     private readonly touchStart = new Vec2();
@@ -70,9 +76,17 @@ export class GuanYuController extends Component {
             const normalizedX = directionX * inverseDistance;
             const normalizedY = directionY * inverseDistance;
             const position = this.node.position;
+            const nextX = Math.max(
+                -this.movementLimitX,
+                Math.min(this.movementLimitX, position.x + normalizedX * this.speed * dt),
+            );
+            const nextY = Math.max(
+                -this.movementLimitY,
+                Math.min(this.movementLimitY, position.y + normalizedY * this.speed * dt),
+            );
             this.node.setPosition(
-                position.x + normalizedX * this.speed * dt,
-                position.y + normalizedY * this.speed * dt,
+                nextX,
+                nextY,
                 0,
             );
             this.lastDirection.set(normalizedX, normalizedY);

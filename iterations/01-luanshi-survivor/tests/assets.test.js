@@ -1,0 +1,148 @@
+"use strict";
+
+var test = require("node:test");
+var assert = require("node:assert/strict");
+var fs = require("node:fs");
+var path = require("node:path");
+
+test("the accepted cartoon home screen is compact and the rejected realistic draft is absent", function () {
+  var assetDirectory = path.join(__dirname, "..", "assets", "ui");
+  var cartoon = path.join(assetDirectory, "home-cartoon-v1.jpg");
+  var rejected = path.join(assetDirectory, "home-camp-v1.jpg");
+  var data = fs.readFileSync(cartoon);
+
+  assert.equal(data[0], 0xff);
+  assert.equal(data[1], 0xd8);
+  assert.ok(data.length < 200 * 1024);
+  assert.equal(fs.existsSync(rejected), false);
+});
+
+test("all comedy hero showcases keep high-resolution masters and compact runtime copies", function () {
+  var root = path.join(__dirname, "..");
+  [
+    ["hero-guan-red-hare-showcase-v4-legs-fixed.png", "guan-showcase-v1.jpg"],
+    ["hero-huang-chicken-showcase-v1.png", "huang-showcase-v1.jpg"],
+    ["hero-zhuge-wooden-ox-convoy-showcase-v2-candidate.png", "zhuge-showcase-v1.jpg"]
+  ].forEach(function (names) {
+    var master = fs.readFileSync(path.join(root, "assets", "concepts", names[0]));
+    var runtime = fs.readFileSync(path.join(root, "assets", "runtime", names[1]));
+    assert.equal(master.toString("ascii", 1, 4), "PNG");
+    assert.equal(master.readUInt32BE(16), 1024);
+    assert.equal(master.readUInt32BE(20), 1536);
+    assert.equal(runtime[0], 0xff);
+    assert.equal(runtime[1], 0xd8);
+    assert.ok(runtime.length < 225 * 1024);
+  });
+});
+
+test("the pushed stove enemy atlas contains five normalized animation frames", function () {
+  var atlas = path.join(__dirname, "..", "assets", "sprites", "enemies", "pushed-stove", "pushed-stove-atlas.png");
+  var data = fs.readFileSync(atlas);
+  assert.equal(data.toString("ascii", 1, 4), "PNG");
+  assert.equal(data.readUInt32BE(16), 512 * 5);
+  assert.equal(data.readUInt32BE(20), 320);
+  assert.ok(data.length < 2 * 1024 * 1024);
+});
+
+test("the Guan Yu hero atlas contains six normalized animation frames", function () {
+  var atlas = path.join(__dirname, "..", "assets", "sprites", "heroes", "guan", "guan-atlas.png");
+  var data = fs.readFileSync(atlas);
+  assert.equal(data.toString("ascii", 1, 4), "PNG");
+  assert.equal(data.readUInt32BE(16), 512 * 6);
+  assert.equal(data.readUInt32BE(20), 384);
+  assert.ok(data.length < 2 * 1024 * 1024);
+});
+
+test("the Zhuge Liang hero atlas contains six normalized animation frames", function () {
+  var atlas = path.join(__dirname, "..", "assets", "sprites", "heroes", "zhuge", "zhuge-atlas.png");
+  var data = fs.readFileSync(atlas);
+  assert.equal(data.toString("ascii", 1, 4), "PNG");
+  assert.equal(data.readUInt32BE(16), 512 * 6);
+  assert.equal(data.readUInt32BE(20), 384);
+  assert.ok(data.length < 2 * 1024 * 1024);
+});
+
+test("the Huang Zhong hero atlas contains six normalized animation frames", function () {
+  var atlas = path.join(__dirname, "..", "assets", "sprites", "heroes", "huang", "huang-atlas.png");
+  var data = fs.readFileSync(atlas);
+  assert.equal(data.toString("ascii", 1, 4), "PNG");
+  assert.equal(data.readUInt32BE(16), 512 * 6);
+  assert.equal(data.readUInt32BE(20), 384);
+  assert.ok(data.length < 2 * 1024 * 1024);
+});
+
+test("Guan Yu's dedicated weapon keeps a high-resolution master and downscaled runtime copy", function () {
+  var root = path.join(__dirname, "..");
+  var master = fs.readFileSync(path.join(root, "assets", "concepts", "guan-yanyuedao-master-v1.png"));
+  var runtime = fs.readFileSync(path.join(root, "assets", "runtime", "guan-yanyuedao-v1.png"));
+  assert.equal(master.toString("ascii", 1, 4), "PNG");
+  assert.equal(master.readUInt32BE(16), 1729);
+  assert.equal(master.readUInt32BE(20), 274);
+  assert.equal(runtime.toString("ascii", 1, 4), "PNG");
+  assert.equal(runtime.readUInt32BE(16), 1024);
+  assert.equal(runtime.readUInt32BE(20), 162);
+  assert.ok(runtime.length < 125 * 1024);
+  var platformSource = fs.readFileSync(path.join(root, "src", "platform", "wechat-game.js"), "utf8");
+  assert.ok(platformSource.includes('loadImage("assets/runtime/guan-yanyuedao-v1.png")'));
+});
+
+test("the common kitchen enemy atlases contain six normalized frames each", function () {
+  ["head-cook", "pot-lid-guard", "bun-thrower"].forEach(function (name) {
+    var atlas = path.join(__dirname, "..", "assets", "sprites", "enemies", name, name + "-atlas.png");
+    var data = fs.readFileSync(atlas);
+    assert.equal(data.toString("ascii", 1, 4), "PNG");
+    assert.equal(data.readUInt32BE(16), 384 * 6);
+    assert.equal(data.readUInt32BE(20), 384);
+    assert.ok(data.length < 2 * 1024 * 1024);
+  });
+});
+
+test("the upload package uses compact runtime atlases and ignores source art", function () {
+  var root = path.join(__dirname, "..");
+  var expected = {
+    "pushed-stove-atlas.png": [384 * 5, 240],
+    "guan-atlas.png": [384 * 6, 288],
+    "huang-atlas.png": [384 * 6, 288],
+    "zhuge-atlas.png": [384 * 6, 288],
+    "head-cook-atlas.png": [288 * 6, 288],
+    "pot-lid-guard-atlas.png": [288 * 6, 288],
+    "bun-thrower-atlas.png": [288 * 6, 288],
+    "guan-yanyuedao-v1.png": [1024, 162]
+  };
+  var runtimeBytes = 0;
+  Object.keys(expected).forEach(function (name) {
+    var data = fs.readFileSync(path.join(root, "assets", "runtime", name));
+    runtimeBytes += data.length;
+    assert.equal(data.readUInt32BE(16), expected[name][0]);
+    assert.equal(data.readUInt32BE(20), expected[name][1]);
+  });
+  assert.ok(runtimeBytes < 3 * 1024 * 1024);
+
+  var projectConfig = JSON.parse(fs.readFileSync(path.join(root, "project.config.json"), "utf8"));
+  var ignoredFolders = projectConfig.packOptions.ignore.filter(function (entry) {
+    return entry.type === "folder";
+  }).map(function (entry) { return entry.value; });
+  assert.ok(ignoredFolders.includes("assets/concepts"));
+  assert.ok(ignoredFolders.includes("assets/sprites"));
+  assert.ok(ignoredFolders.includes("tests"));
+  assert.ok(ignoredFolders.includes("scripts"));
+  assert.ok(ignoredFolders.includes(".git"));
+});
+
+test("the original soundtrack and effects are valid compact WAV assets", function () {
+  var root = path.join(__dirname, "..", "assets", "audio");
+  var files = [
+    "bgm/calm.wav", "bgm/heroic.wav", "bgm/danger.wav",
+    "sfx/attack.wav", "sfx/shot.wav", "sfx/enemy-hit.wav",
+    "sfx/player-hit.wav", "sfx/pickup.wav", "sfx/level-up.wav",
+    "sfx/victory.wav", "sfx/defeat.wav", "sfx/danger.wav"
+  ];
+  var totalBytes = 0;
+  files.forEach(function (name) {
+    var data = fs.readFileSync(path.join(root, name));
+    totalBytes += data.length;
+    assert.equal(data.toString("ascii", 0, 4), "RIFF");
+    assert.equal(data.toString("ascii", 8, 12), "WAVE");
+  });
+  assert.ok(totalBytes < 1024 * 1024);
+});

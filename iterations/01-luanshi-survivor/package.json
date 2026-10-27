@@ -1,0 +1,16 @@
+{
+  "name": "luanshi-survivor",
+  "version": "0.1.0",
+  "private": true,
+  "description": "A lightweight Three Kingdoms survivor Roguelite graybox for WeChat Mini Game.",
+  "scripts": {
+    "test": "node tests/run-tests.js",
+    "check": "node scripts/check-syntax.js",
+    "check:cocos": "node scripts/check-cocos-migration.js",
+    "build:cocos:web": "powershell -NoProfile -ExecutionPolicy Bypass -File scripts/cocos-build.ps1 -Target web-mobile",
+    "build:cocos:wechat": "powershell -NoProfile -ExecutionPolicy Bypass -File scripts/cocos-build.ps1 -Target wechatgame"
+  },
+  "engines": {
+    "node": ">=18"
+  }
+}

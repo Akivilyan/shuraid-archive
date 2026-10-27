@@ -1,0 +1,438 @@
+"use strict";
+
+var test = require("node:test");
+var assert = require("node:assert/strict");
+var Renderer = require("../src/render/renderer");
+
+function makeContext() {
+  var context = {};
+  ["arc", "beginPath", "clearRect", "clip", "closePath", "drawImage", "ellipse", "fill", "fillRect", "fillText", "lineTo", "moveTo", "quadraticCurveTo", "rect", "restore", "rotate", "save", "scale", "stroke", "strokeRect", "strokeText", "translate"].forEach(function (method) {
+    context[method] = function () {};
+  });
+  return context;
+}
+
+function makeHomeWorld(heroId) {
+  var heroes = {
+    guan: { id: "guan", name: "关羽", className: "长兵" },
+    huang: { id: "huang", name: "黄忠", className: "弓箭" },
+    zhuge: { id: "zhuge", name: "诸葛亮", className: "法术" }
+  };
+  return { hero: heroes[heroId], heroId: heroId };
+}
+
+test("home screen keeps one large primary action above the fixed navigation", function () {
+  var renderer = new Renderer(null, 375, 812, { safeTop: 44, safeBottom: 20, playTop: 110 });
+  var layout = renderer.getShellLayout();
+  assert.equal(renderer.getHomeActionAt(187, layout.contentBottom - 42), "start");
+  assert.equal(renderer.getHomeActionAt(10, 200), "none");
+});
+
+test("fixed navigation only exposes implemented pages", function () {
+  var renderer = new Renderer(null, 375, 812, { safeTop: 44, safeBottom: 20, playTop: 110 });
+  var navY = renderer.getShellLayout().navY;
+  assert.equal(renderer.getBottomNavActionAt(112, navY + 35), "hero");
+  assert.equal(renderer.getBottomNavActionAt(187, navY + 35), "home");
+  assert.equal(renderer.getBottomNavActionAt(37, navY + 35), "none");
+  assert.equal(renderer.getBottomNavActionAt(337, navY + 35), "none");
+  assert.equal(renderer.getBottomNavActionAt(187, navY - 30), "none");
+});
+
+test("settings remains a separate safe-area header action", function () {
+  var renderer = new Renderer(null, 375, 812, { safeTop: 44, safeBottom: 20, playTop: 110 });
+  assert.equal(renderer.getTopActionAt(342, 72), "settings");
+  assert.equal(renderer.getTopActionAt(187, 72), "none");
+});
+
+test("settings touch regions expose vibration, music, sound, and back separately", function () {
+  var renderer = new Renderer(null, 375, 812, { safeTop: 44, playTop: 110 });
+  var panelY = Math.max(44 + 70, 812 * 0.22);
+  assert.equal(renderer.getSettingsActionAt(187, panelY + 105), "vibration");
+  assert.equal(renderer.getSettingsActionAt(187, panelY + 170), "music");
+  assert.equal(renderer.getSettingsActionAt(187, panelY + 238), "sound");
+  assert.equal(renderer.getSettingsActionAt(187, panelY + 325), "back");
+});
+
+test("hero screen exposes three large and separate hero choices", function () {
+  var renderer = new Renderer(null, 375, 812, { safeTop: 44, safeBottom: 20, playTop: 110 });
+  var layout = renderer.getHeroLayout();
+  var cardWidth = (layout.width - 32 - layout.choiceGap * 2) / 3;
+  var choiceY = layout.choiceTop + layout.choiceHeight / 2;
+  assert.equal(renderer.getHeroActionAt(layout.x + 16 + cardWidth / 2, choiceY), "guan");
+  assert.equal(renderer.getHeroActionAt(layout.x + 16 + cardWidth * 1.5 + layout.choiceGap, choiceY), "huang");
+  assert.equal(renderer.getHeroActionAt(layout.x + 16 + cardWidth * 2.5 + layout.choiceGap * 2, choiceY), "zhuge");
+  assert.equal(renderer.getHeroActionAt(10, choiceY), "none");
+  assert.equal(renderer.getHeroActionAt(187, layout.choiceTop - 40), "none");
+});
+
+test("compact screens keep hero copy, choices, navigation, and the bottom safe area separate", function () {
+  var renderer = new Renderer(null, 375, 667, { safeTop: 24, safeBottom: 20, playTop: 90 });
+  var shell = renderer.getShellLayout();
+  var hero = renderer.getHeroLayout();
+  assert.ok(hero.portraitBottom + 64 < hero.choiceTop);
+  assert.ok(hero.choiceTop + hero.choiceHeight < shell.contentBottom);
+  assert.equal(shell.navY + shell.navHeight + renderer.safeBottom, renderer.height);
+});
+
+test("home screen names the game and renders the selected hero portrait", function () {
+  var context = makeContext();
+  var labels = [];
+  var drawImageCalls = 0;
+  context.fillText = function (label) { labels.push(label); };
+  context.drawImage = function () { drawImageCalls += 1; };
+  var renderer = new Renderer(context, 375, 812, {
+    safeTop: 44,
+    playTop: 110,
+    heroAtlases: { zhuge: { width: 2304, height: 288 } }
+  });
+  renderer.render(makeHomeWorld("zhuge"), null, {
+    screen: "home",
+    homeImage: null,
+    settings: {},
+    elapsed: 1.2
+  });
+  assert.ok(labels.includes("报，蜀军来劫粮"));
+  assert.ok(labels.includes("诸葛亮 · 法术"));
+  assert.equal(drawImageCalls, 1);
+});
+
+test("selected hero card uses an action frame and explicit selected label", function () {
+  var context = makeContext();
+  var labels = [];
+  var sourceFrames = [];
+  context.fillText = function (label) { labels.push(label); };
+  context.drawImage = function (image, sourceX) { sourceFrames.push(sourceX); };
+  var renderer = new Renderer(context, 375, 812, {
+    safeTop: 44,
+    playTop: 110,
+    heroAtlases: {
+      guan: { width: 2304, height: 288 },
+      zhuge: { width: 2304, height: 288 }
+    }
+  });
+  renderer.drawHeroScreen("zhuge", 1.2);
+  assert.ok(labels.includes("当前"));
+  assert.ok(labels.includes("点击下方武将即可立即换将"));
+  assert.equal(labels.includes("确认武将"), false);
+  assert.ok(sourceFrames.some(function (sourceX) { return sourceX >= 384 * 3; }));
+});
+
+test("each hero uses a dedicated showcase instead of enlarging the battle skeleton", function () {
+  var context = makeContext();
+  var showcaseDraws = 0;
+  var showcases = {
+    guan: { width: 720, height: 1080 },
+    huang: { width: 720, height: 1080 },
+    zhuge: { width: 720, height: 1080 }
+  };
+  context.drawImage = function (image) {
+    if (image === showcases.guan || image === showcases.huang || image === showcases.zhuge) {
+      showcaseDraws += 1;
+    }
+  };
+  var renderer = new Renderer(context, 375, 812, {
+    safeTop: 44,
+    safeBottom: 20,
+    playTop: 110,
+    heroShowcases: showcases
+  });
+  ["guan", "huang", "zhuge"].forEach(function (heroId) {
+    renderer.drawHomeScreen(makeHomeWorld(heroId), 1.2);
+  });
+  assert.equal(showcaseDraws, 3);
+});
+
+test("hero selection renders its own full-page artwork without the old camp background", function () {
+  var context = makeContext();
+  var homeImage = { width: 750, height: 1624 };
+  var showcase = { width: 720, height: 1080 };
+  var homeDraws = 0;
+  var fullPageDraws = 0;
+  context.drawImage = function (image) {
+    if (image === homeImage) { homeDraws += 1; }
+    if (image === showcase && arguments[5] === 0 && arguments[6] === 0 && arguments[7] === 375) {
+      fullPageDraws += 1;
+    }
+  };
+  var renderer = new Renderer(context, 375, 812, {
+    safeTop: 44,
+    safeBottom: 20,
+    playTop: 110,
+    heroShowcases: { huang: showcase }
+  });
+  renderer.render(makeHomeWorld("huang"), null, {
+    screen: "hero",
+    homeImage: homeImage,
+    settings: {},
+    elapsed: 1.2
+  });
+  assert.equal(homeDraws, 0);
+  assert.equal(fullPageDraws, 1);
+});
+
+test("the articulated rig renders every hero without a Canvas error", function () {
+  var renderer = new Renderer(makeContext(), 375, 812, { safeTop: 44, playTop: 110 });
+  ["guan", "huang", "zhuge"].forEach(function (heroId) {
+    assert.doesNotThrow(function () {
+      renderer.drawPlayer({
+        x: 100,
+        y: 100,
+        facing: { x: 1, y: 0 },
+        heroId: heroId,
+        moving: true,
+        walkTime: 0.4,
+        actionTime: 0.09,
+        hurtTime: 0.11,
+        invulnerable: 0
+      }, 1.2);
+    });
+  });
+});
+
+test("the articulated rig renders all soldier classes in both factions", function () {
+  var renderer = new Renderer(makeContext(), 375, 812, { safeTop: 44, playTop: 110 });
+  var enemies = [];
+  ["grunt", "runner", "brute", "archer", "boss"].forEach(function (type, index) {
+    ["wei", "wu"].forEach(function (faction, factionIndex) {
+      enemies.push({
+        type: type,
+        faction: faction,
+        x: 60 + index * 40,
+        y: 100 + factionIndex * 50,
+        radius: type === "boss" ? 31 : type === "brute" ? 16 : 11,
+        age: 0.6,
+        attackTime: 0.12,
+        hitFlash: 0.05,
+        facingX: 0,
+        facingY: 1,
+        health: 20,
+        maxHealth: 40
+      });
+    });
+  });
+  assert.doesNotThrow(function () { renderer.drawEnemies(enemies); });
+});
+
+test("the pushed stove atlas replaces the runner drawing when loaded", function () {
+  var context = makeContext();
+  var drawCalls = 0;
+  context.drawImage = function () { drawCalls += 1; };
+  var renderer = new Renderer(context, 375, 812, {
+    safeTop: 44,
+    playTop: 110,
+    enemyAtlases: { pushedStove: { width: 1920, height: 240 } }
+  });
+  renderer.drawEnemies([{
+    type: "runner",
+    faction: "wei",
+    x: 120,
+    y: 160,
+    radius: 15,
+    age: 0.6,
+    attackTime: 0,
+    hitFlash: 0,
+    facingX: -1,
+    facingY: 0,
+    health: 20,
+    maxHealth: 20
+  }]);
+  assert.equal(drawCalls, 1);
+});
+
+test("the Guan Yu atlas renders the default hero when loaded", function () {
+  var context = makeContext();
+  var drawCalls = 0;
+  var destinationY = 0;
+  var destinationHeight = 0;
+  context.drawImage = function () {
+    drawCalls += 1;
+    destinationY = arguments[6];
+    destinationHeight = arguments[8];
+  };
+  var renderer = new Renderer(context, 375, 812, {
+    safeTop: 44,
+    playTop: 110,
+    heroAtlases: { guan: { width: 2304, height: 288 } }
+  });
+  renderer.drawPlayer({
+    x: 120,
+    y: 160,
+    facing: { x: 1, y: 0 },
+    heroId: "guan",
+    moving: true,
+    walkTime: 0.4,
+    actionTime: 0,
+    hurtTime: 0,
+    invulnerable: 0
+  }, 1.2);
+  assert.equal(drawCalls, 1);
+  assert.equal(destinationY + destinationHeight, 17);
+});
+
+test("the Zhuge Liang atlas replaces the fallback drawing when loaded", function () {
+  var drawImageCalls = 0;
+  var context = makeContext();
+  context.drawImage = function () { drawImageCalls += 1; };
+  var renderer = new Renderer(context, 375, 812, {
+    safeTop: 44,
+    playTop: 110,
+    heroAtlases: { zhuge: { width: 2304, height: 288 } }
+  });
+  renderer.drawPlayer({
+    heroId: "zhuge", x: 100, y: 120, facing: { x: 1, y: 0 },
+    moving: false, walkTime: 0, actionTime: 0, hurtTime: 0, invulnerable: 0
+  }, 0);
+  assert.equal(drawImageCalls, 1);
+});
+
+test("the Huang Zhong atlas replaces the fallback drawing when loaded", function () {
+  var drawImageCalls = 0;
+  var destinationY = 0;
+  var destinationHeight = 0;
+  var context = makeContext();
+  context.drawImage = function () {
+    drawImageCalls += 1;
+    destinationY = arguments[6];
+    destinationHeight = arguments[8];
+  };
+  var renderer = new Renderer(context, 375, 812, {
+    safeTop: 44,
+    playTop: 110,
+    heroAtlases: { huang: { width: 2304, height: 288 } }
+  });
+  renderer.drawPlayer({
+    heroId: "huang", x: 100, y: 120, facing: { x: 1, y: 0 },
+    moving: false, walkTime: 0, actionTime: 0, hurtTime: 0, invulnerable: 0
+  }, 0);
+  assert.equal(drawImageCalls, 1);
+  assert.equal(destinationY + destinationHeight, 17);
+});
+
+test("the Eight Trigram Formation renders with the lightweight Canvas path", function () {
+  var renderer = new Renderer(makeContext(), 375, 812, { safeTop: 44, playTop: 110 });
+  assert.doesNotThrow(function () {
+    renderer.drawSlashes([{ shape: "trigram", color: "trigram", x: 120, y: 180, range: 60, life: 0.5, maxLife: 0.68 }]);
+  });
+});
+
+test("Green Dragon Slash unfolds as a short horizontal weapon sweep without a filled fan", function () {
+  var context = makeContext();
+  var weapon = { width: 1024, height: 162 };
+  var weaponDraws = [];
+  var arcCalls = 0;
+  var fillCalls = 0;
+  context.arc = function () { arcCalls += 1; };
+  context.fill = function () { fillCalls += 1; };
+  context.drawImage = function (image, x, y, width, height) {
+    if (image === weapon) { weaponDraws.push({ x: x, y: y, width: width, height: height }); }
+  };
+  var renderer = new Renderer(context, 375, 812, {
+    safeTop: 44,
+    playTop: 110,
+    guanWeaponImage: weapon
+  });
+  renderer.drawSlashes([
+    { shape: "sector", color: "blade", x: 120, y: 180, facingX: 1, facingY: 0, range: 130, halfAngle: 0.66, rank: 3, full: false, life: 0.18, maxLife: 0.34 }
+  ]);
+  assert.equal(weaponDraws.length, 3);
+  assert.ok(arcCalls >= 5);
+  assert.equal(fillCalls, 0);
+  assert.ok(weaponDraws[2].width < weapon.width);
+  assert.ok(weaponDraws[2].height < weapon.height);
+});
+
+test("Green Dragon Ring Slash rotates the complete high-resolution guandao around Guan Yu", function () {
+  var context = makeContext();
+  var weapon = { width: 1024, height: 162 };
+  var weaponDraws = [];
+  var arcCalls = 0;
+  var rotateCalls = [];
+  context.arc = function () { arcCalls += 1; };
+  context.rotate = function (angle) { rotateCalls.push(angle); };
+  context.drawImage = function (image, x, y, width, height) {
+    if (image === weapon) { weaponDraws.push({ x: x, y: y, width: width, height: height }); }
+  };
+  var renderer = new Renderer(context, 375, 812, {
+    safeTop: 44,
+    playTop: 110,
+    guanWeaponImage: weapon
+  });
+  assert.doesNotThrow(function () {
+    renderer.drawSlashes([
+      { shape: "ringblade", color: "ringblade", x: 120, y: 180, range: 174, rank: 3, full: true, rotations: 2, gripPivot: 0.18, life: 0.46, maxLife: 0.92 }
+    ]);
+  });
+  assert.equal(weaponDraws.length, 3);
+  var weaponDraw = weaponDraws[weaponDraws.length - 1];
+  var expectedLength = 174 / 0.82;
+  var expectedHeight = expectedLength * 162 / 1024 * 1.35;
+  assert.ok(Math.abs(weaponDraw.x + expectedLength * 0.18) < 0.000001);
+  assert.ok(Math.abs(weaponDraw.width - expectedLength) < 0.000001);
+  assert.ok(Math.abs(weaponDraw.height - expectedHeight) < 0.000001);
+  assert.ok(Math.abs(weaponDraw.y + expectedHeight / 2) < 0.000001);
+  assert.ok(weaponDraw.width < weapon.width);
+  assert.ok(weaponDraw.height < weapon.height);
+  assert.ok(arcCalls >= 6);
+  assert.ok(Math.abs(rotateCalls[rotateCalls.length - 1] - Math.PI * 2) < 0.000001);
+});
+
+test("Warm Wine Slash enlarges its translucent clone while keeping fixed echoes and wind lines", function () {
+  var context = makeContext();
+  var atlas = { width: 2304, height: 288 };
+  var cloneDraws = [];
+  var windCurves = 0;
+  context.quadraticCurveTo = function () { windCurves += 1; };
+  context.drawImage = function (image) {
+    if (image === atlas) {
+      cloneDraws.push({
+        alpha: context.globalAlpha,
+        destinationY: arguments[6],
+        destinationHeight: arguments[8]
+      });
+    }
+  };
+  var renderer = new Renderer(context, 375, 812, {
+    safeTop: 44,
+    playTop: 110,
+    heroAtlases: { guan: atlas }
+  });
+  renderer.drawSlashes([
+    { shape: "warmwine", color: "warmwine", x: 120, y: 180, facingX: 1, facingY: 0, range: 360, halfWidth: 32, cloneScale: 1.28, rank: 3, life: 0.41, maxLife: 0.82 }
+  ]);
+  assert.equal(cloneDraws.length, 3);
+  assert.equal(windCurves, 4);
+  var mainClone = cloneDraws[cloneDraws.length - 1];
+  assert.ok(mainClone.alpha > 0 && mainClone.alpha < 1);
+  assert.equal(mainClone.destinationY + mainClone.destinationHeight, 17);
+  assert.ok(Math.abs(mainClone.destinationHeight - 76 * 1.28) < 0.000001);
+});
+
+test("the three kitchen atlases replace grunt brute and archer drawings", function () {
+  var context = makeContext();
+  var drawCalls = 0;
+  context.drawImage = function () { drawCalls += 1; };
+  var image = { width: 1728, height: 288 };
+  var renderer = new Renderer(context, 375, 812, {
+    safeTop: 44,
+    playTop: 110,
+    enemyAtlases: { headCook: image, potLidGuard: image, bunThrower: image }
+  });
+  var enemies = ["grunt", "brute", "archer"].map(function (type, index) {
+    return {
+      type: type,
+      faction: "wei",
+      x: 80 + index * 60,
+      y: 160,
+      radius: type === "brute" ? 16 : 11,
+      age: 0.6,
+      attackTime: 0,
+      hitFlash: 0,
+      facingX: -1,
+      facingY: 0,
+      health: 20,
+      maxHealth: 40
+    };
+  });
+  renderer.drawEnemies(enemies);
+  assert.equal(drawCalls, 3);
+});
